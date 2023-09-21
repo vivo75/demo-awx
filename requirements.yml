@@ -1,7 +1,5 @@
 ---
+# ansible-galaxy collection install -r requirements.yml -p ./collections/
 
-- geerlingguy.apache
-- geerlingguy.php
-- geerlingguy.php-mysql
-- geerlingguy.php-memcached
-- geerlingguy.mysql
+collections:
+  - community.general
