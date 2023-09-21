@@ -1,6 +1,0 @@
----
-
-mysql_replication_user: {name: 'replication', password: 'secret'}
-mysql_databases:
-  - { name: mycompany_database, collation: utf8_general_ci, encoding: utf8 }
-

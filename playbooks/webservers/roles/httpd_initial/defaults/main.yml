@@ -1,5 +1,0 @@
----
-sysadmin_email: info@example.org
-https: false
-cloudflare: false
-staging: true

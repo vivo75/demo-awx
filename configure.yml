@@ -1,5 +1,0 @@
----
-- import_playbook: playbooks/webservers/main.yml
-- import_playbook: playbooks/db/main.yml
-- import_playbook: playbooks/php/main.yml
-

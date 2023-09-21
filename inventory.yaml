@@ -1,0 +1,1037 @@
+all:
+  children:
+    db:
+      hosts:
+        c18:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.18
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c19:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.19
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+    infrastructure:
+      hosts:
+        c01:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.1
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c02:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.2
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c03:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.3
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c04:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.4
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c05:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.5
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c06:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.6
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c07:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.7
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+    php:
+      hosts:
+        c20:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.20
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          pool: &id001
+            www: '[www]
+
+              user = www-data
+
+              group = www-data
+
+              listen = 0.0.0.0:9000
+
+              pm = dynamic
+
+              pm.max_children = 5
+
+              pm.start_servers = 2
+
+              pm.min_spare_servers = 1
+
+              pm.max_spare_servers = 2
+
+              '
+        c21:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.21
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          pool: *id001
+        c22:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.22
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          pool: *id001
+        c23:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.23
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          pool: *id001
+        c24:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.24
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          pool: *id001
+        c25:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.25
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          pool: *id001
+        c26:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.26
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          pool: *id001
+        c27:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.27
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          pool: *id001
+    ungrouped:
+      hosts:
+        c08:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.8
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c09:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.9
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c28:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.28
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c29:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.29
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c30:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.30
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c31:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.31
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c32:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.32
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c33:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.33
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c34:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.34
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c35:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.35
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c36:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.36
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c37:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.37
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c38:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.38
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c39:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.39
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c40:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.40
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c41:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.41
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c42:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.42
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c43:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.43
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c44:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.44
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c45:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.45
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c46:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.46
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c47:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.47
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c48:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.48
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c49:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.49
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c50:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.50
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c51:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.51
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c52:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.52
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c53:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.53
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c54:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.54
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c55:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.55
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c56:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.56
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c57:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.57
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c58:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.58
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c59:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.59
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c60:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.60
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c61:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.61
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c62:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.62
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c63:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.63
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c64:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.64
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c65:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.65
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c66:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.66
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c67:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.67
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c68:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.68
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c69:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.69
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c70:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.70
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c71:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.71
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c72:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.72
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c73:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.73
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c74:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.74
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c75:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.75
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c76:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.76
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c77:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.77
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c78:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.78
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c79:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.79
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c80:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.80
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c81:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.81
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c82:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.82
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c83:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.83
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c84:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.84
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c85:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.85
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c86:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.86
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c87:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.87
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c88:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.88
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c89:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.89
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c90:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.90
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c91:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.91
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c92:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.92
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c93:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.93
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c94:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.94
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c95:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.95
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c96:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.96
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c97:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.97
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c98:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.98
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+        c99:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.99
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+    webservers:
+      hosts:
+        c10:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.10
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          port: 80
+        c11:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.11
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          port: 80
+        c12:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.12
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          port: 80
+        c13:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.13
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          port: 80
+        c14:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.14
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          port: 80
+        c15:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.15
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          port: 80
+        c16:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.16
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          port: 80
+        c17:
+          ansible_connection: ssh
+          ansible_host: 10.6.0.17
+          ansible_lxd_os: ubuntu
+          ansible_lxd_profile:
+          - default
+          ansible_lxd_project: default
+          ansible_lxd_release: lunar
+          ansible_lxd_state: running
+          ansible_lxd_type: container
+          port: 80
