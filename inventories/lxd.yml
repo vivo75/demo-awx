@@ -1,0 +1,21 @@
+---
+# simple lxd.yml
+plugin: community.general.lxd
+url: unix:/var/lib/lxd/unix.socket
+type_filter: both
+groupby:
+  infrastructure:
+    type: network_range
+    attribute: 10.6.0.0/29
+  webservers:
+    # There is a 1 <=> 1 relationship between webservers and php, they MUST have the same number of hosts
+    type: pattern
+    attribute: c1[0-7]
+  php:
+    type: pattern
+    attribute: c2[0-7]
+
+  db:
+    type: pattern
+    attribute: c1[8-9]
+

@@ -1,0 +1,27 @@
+---
+- hosts: db
+
+  vars_files:
+    - vars.yml
+
+  pre_tasks:
+    - name: Create dynamic MySQL variables.
+      set_fact:
+        mysql_users:
+          - {
+            name: mycompany_user,
+            host: "{{ groups['db'][0] }}",
+            password: secret,
+            priv: "*.*:SELECT"
+          }
+          - {
+            name: mycompany_user,
+            host: "{{ groups['db'][1] }}",
+            password: secret,
+            priv: "*.*:SELECT"
+          }
+        mysql_replication_master: "{{ groups['db'][0] }}"
+
+  roles:
+    - mysql
+

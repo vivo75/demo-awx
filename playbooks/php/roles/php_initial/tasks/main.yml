@@ -1,0 +1,28 @@
+---
+- name: Install php
+  apt:
+    name: "{{ php_packages }}"
+    install_recommends: false
+    state: present
+
+- name: Set php version
+  shell:
+    cmd: php --version | head -n 1 | awk '{print $2}' | cut -f1,2 -d'.'
+  register: php_version
+  changed_when: false
+  check_mode: false
+  tags:
+    - skip_ansible_lint
+
+- name: Enable service
+  systemd:
+    name: php{{ php_version.stdout }}-fpm
+    enabled: true
+
+- name: Change default php.ini
+  lineinfile:
+    path: /etc/php/{{ php_version.stdout }}/fpm/php.ini
+    state: present
+    regexp: ';cgi.fix_pathinfo=1'
+    line: 'cgi.fix_pathinfo=0'
+    backup: true
