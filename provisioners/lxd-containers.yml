@@ -9,14 +9,14 @@
   tasks:
 
     - name: Check if LXD network exist
-       ansible.builtin.raw: "lxc network info {{ lxd_network }}"
+      ansible.builtin.raw: "lxc network info {{ lxd_network }}"
       register: lxdbr_check
-      failed_when: lxdbr_check not in [0, ]
+      failed_when: lxdbr_check.rc not in [0, 1]
       changed_when: false
 
     - name: Create the network if absent, cannot change it ATM
       ansible.builtin.raw: "lxc network create {{ lxd_network }} --type=bridge ipv4.address={{ lxd_subnet | ansible.utils.ipmath(254) }}/24 ipv4.nat=true"
-      when: lxdbr_check != 0
+      when: lxdbr_check.rc != 0
 
     - include_tasks: lxd-containers.loop.yml
       loop: "{{ range(container_range_start, container_range_stop)|list }}"

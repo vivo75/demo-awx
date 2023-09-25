@@ -1,0 +1,11 @@
+# [containers]
+# mycontainer ansible_connection=lxd
+
+all:
+  children:
+    ungrouped:
+      hosts:
+        "c[01:99]"
+      vars:
+        ansible_connection: lxd
+

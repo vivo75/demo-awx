@@ -51,8 +51,4 @@
         masked: true
         name: "{{ item }}"
       loop: "{{ unwanted_services }}"
-
   delegate_to: "{{ 'c%02d' | format(container) }}"
-
-# "{{ 'c%02d' | format(item) }}"
-# loop: "{{ range(30, container)|list }}"
