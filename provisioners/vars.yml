@@ -1,0 +1,17 @@
+---
+
+# the pre-existant LXD network which is NATted to the outside
+lxd_network: "lxdbr0"
+lxd_subnet: "10.7.0.0/24"
+
+# container image and parameters
+lxc_image_alias: "ubuntu/mantic/amd64"
+unwanted_services:
+- e2scrub_reap.service
+- systemd-hostnamed.service
+ansible_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAzErRcPH7tJyrK0keDv8/d3N35e416lGoXwDVHOgzvb root@host@2023-09-20"
+
+# how/which containers to create
+container_range_start: 30
+container_range_stop: 100
+

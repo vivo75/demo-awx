@@ -1,0 +1,58 @@
+---
+
+# TODO: real idempotency should check for prior existance of the container
+- name: Create a started container
+  community.general.lxd_container:
+    name: "{{ 'c%02d' | format(container) }}"
+    ignore_volatile_options: true
+    state: started
+    source:
+      type: image
+      mode: pull
+      server: https://images.linuxcontainers.org
+      protocol: simplestreams
+      alias: "{{ lxc_image_alias }}"
+    profiles: ["default"]
+    wait_for_ipv4_addresses: true
+    timeout: 30
+    devices:
+      eth0:
+        name: "eth0"
+        ipv4.address:  "{{ lxd_subnet | ansible.utils.ipmath(container) }}"
+        host_name: "{{ 'veth-%02d' | format(container) }}"
+        type: "nic"
+        network: "{{ lxd_network }}"
+
+- name: Delegate to container
+  block:
+
+    - name: update package list
+      ansible.builtin.raw: apt-get update
+
+    - name: Install basic packages in container
+      ansible.builtin.raw: apt-get install -y python3 openssh-server
+
+    - name: Copy ssh pubkey
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ ansible_key }}"
+
+    - name: Make sure ssh daemon is started
+      ansible.builtin.systemd:
+        state: started
+        enabled: true
+        name: ssh.service
+
+    - name: Disable unwanted services
+      ansible.builtin.systemd:
+        state: stopped
+        enabled: false
+        masked: true
+        name: "{{ item }}"
+      loop: "{{ unwanted_services }}"
+
+  delegate_to: "{{ 'c%02d' | format(container) }}"
+
+# "{{ 'c%02d' | format(item) }}"
+# loop: "{{ range(30, container)|list }}"
