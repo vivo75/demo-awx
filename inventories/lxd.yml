@@ -1,7 +1,8 @@
 ---
 # simple lxd.yml
 plugin: community.general.lxd
-url: unix:/var/lib/lxd/unix.socket
+url: https://10.4.0.1:9999
+trust_password: l7f6lo6h4y1ejyauxh5yb2giugejw6uz
 type_filter: both
 groupby:
   infrastructure:
