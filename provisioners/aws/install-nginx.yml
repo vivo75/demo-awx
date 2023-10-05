@@ -1,7 +1,7 @@
 ---
-# ansible-playbook -v -iLABgitea, install-nginx.yml
+# ansible-playbook -v -i inventory.yml install-nginx.yml
 
-- hosts: all
+- hosts: nginx
   gather_facts: no
   become: true
   vars_files:
@@ -9,6 +9,8 @@
   tasks:
     - name: Update system
       ansible.builtin.apt:
+        name: "*"
+        state: latest
         update_cache: yes
     - name: Add packages
       ansible.builtin.apt:
@@ -17,7 +19,7 @@
         - nginx-full
         - python3-certbot-nginx
 
-- hosts: all
+- hosts: nginx
   gather_facts: yes
   become: true
   vars_files:
@@ -28,7 +30,7 @@
 
 
 
-- hosts: all
+- hosts: nginx
   gather_facts: no
   become: true
   vars_files:

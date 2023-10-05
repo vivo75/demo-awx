@@ -1,7 +1,7 @@
 ---
-# ansible-playbook -v -iLABgitea, install-gitea.yml
+# ansible-playbook -v -i inventory.yml install-gitea.yml
 
-- hosts: all
+- hosts: gitea
   gather_facts: no
   become: true
   vars_files:
@@ -9,13 +9,15 @@
   tasks:
     - name: Update system
       ansible.builtin.apt:
+        name: "*"
+        state: latest
         update_cache: yes
     - name: Add packages
       ansible.builtin.apt:
         pkg:
         - gnupg2
 
-- hosts: all
+- hosts: gitea
   gather_facts: yes
   become: true
   vars_files:

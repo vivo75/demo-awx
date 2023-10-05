@@ -1,7 +1,7 @@
 ---
-# ansible-playbook -v -iLABgitea, install-db.yml
+# ansible-playbook -v -i inventory.yml install-db.yml
 
-- hosts: all
+- hosts: db
   gather_facts: no
   become: true
   vars_files:
@@ -13,7 +13,7 @@
         state: latest
         update_cache: yes
 
-- hosts: all
+- hosts: db
   gather_facts: yes
   become: true
   vars_files:
