@@ -1,0 +1,25 @@
+---
+- block:
+  - name: Manage the log rotate size
+    lineinfile:
+        path: /etc/logrotate.d/nginx
+        insertbefore: "notifempty"
+        unsafe_writes: no
+        create: no
+        state: present
+        firstmatch: yes
+        regexp: "maxsize.*$"
+        line: "        maxsize {{ nginx_logrotate_maxfilesize }}"
+
+  - name: Manage the log rotate size
+    lineinfile:
+        path: /etc/logrotate.d/nginx
+        insertbefore: "notifempty"
+        unsafe_writes: no
+        create: no
+        state: present
+        firstmatch: yes
+        regexp: "rotate.*$"
+        line: "        rotate {{ nginx_logrotate_retention }}"
+
+  tags: [ 'nginx', 'nginx_conf', 'nginx_logrotate' ]

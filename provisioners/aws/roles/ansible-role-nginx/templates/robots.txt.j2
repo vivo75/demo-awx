@@ -1,0 +1,21 @@
+{% if nginx_robots_disallow_everything %}
+User-Agent: *
+Disallow: /
+{% else %}
+{% for ua in nginx_robots_disallowed_useragent_list %}
+User-agent: {{ ua }}
+Disallow: /
+
+{% endfor %}
+{% if nginx_robots_disallowed_uris %}
+User-agent: *
+{% for uri in nginx_robots_disallowed_uris_list %}
+Disallow: {{ uri }}
+{% endfor %}
+{% endif %}
+
+{% if nginx_robots_enable_crawl_delay %}
+User-Agent: *
+Crawl-Delay: {{ nginx_robots_crawl_delay }}
+{% endif %}
+{% endif %}

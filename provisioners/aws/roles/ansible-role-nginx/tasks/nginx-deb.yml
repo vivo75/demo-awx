@@ -1,0 +1,59 @@
+---
+- block:
+  - name: Install the Ubuntu PPA for nginx
+    apt_repository: repo='{{ nginx_ppa_repo }}' update_cache=yes
+    when:
+      - nginx_use_ppa
+      - ansible_distribution == 'Ubuntu'
+    tags: [ 'nginx', 'nginx_ppa' ]
+
+  - name: Install the key of the nginx.com repository
+    apt_key:
+      url: '{{ nginx_org_repo_key }}'
+      state: present
+    when:
+      - nginx_use_nginx_org_repo
+      - ansible_distribution == 'Ubuntu'
+    tags: [ 'nginx', 'nginx_org_ppa' ]
+
+  - name: Install the nginx.com repository configuration
+    apt_repository:
+      repo: '{{ nginx_org_repo }}'
+      update_cache: yes
+      filename: nginx_org
+    when:
+      - nginx_use_nginx_org_repo
+      - ansible_distribution == 'Ubuntu'
+    tags: [ 'nginx', 'nginx_org_ppa' ]
+
+  - name: Install the nginx web server
+    apt: pkg=nginx-full state={{ nginx_package_state }} cache_valid_time=1800
+    when:
+      - not nginx_use_ldap_pam_auth
+      - ansible_distribution_major_version <= '14'
+
+  - name: Install the nginx web server if we need ldap auth via pam
+    apt: pkg=nginx-extras state={{ nginx_package_state }} cache_valid_time=1800
+    when:
+      - nginx_use_ldap_pam_auth
+      - ansible_distribution_major_version <= '14'
+
+  - name: Install the nginx web server on Ubuntu >= 16.04
+    apt:
+      pkg: nginx
+      state: present
+      cache_valid_time: 1800
+    when: ansible_distribution_major_version >= '16'
+
+  - name: Install the nginx.com additional modules
+    apt:
+      pkg: '{{ item.pkg_name }}'
+      state: present
+      cache_valid_time: 1800
+    loop: '{{ nginx_org_modules }}'
+    when:
+      - nginx_use_nginx_org_repo
+      - ansible_distribution_major_version >= '16'
+
+  when: ansible_distribution_file_variety == "Debian"
+  tags: [ nginx ]

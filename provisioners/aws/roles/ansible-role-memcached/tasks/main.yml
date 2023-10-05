@@ -1,0 +1,48 @@
+---
+- block:
+  - name: Install the memcached package on deb
+    apt: name={{ mc_packages }} state=present cache_valid_time=1800
+
+  - name: Install the memcached conf file
+    template: src={{ item }}.j2 dest=/etc/{{ item }} owner=root group=root mode=0444
+    with_items:
+      - memcached.conf
+    notify: Restart memcached
+
+  - name: Enable memcached
+    copy: content="ENABLE_MEMCACHED='yes'" dest=/etc/default/memcached
+    when: mc_enabled
+
+  when: ansible_distribution_file_variety == "Debian"
+  tags: [ 'memcache', 'memcached' ]
+
+- block:
+  - name: Install the memcached package on EL
+    yum: name={{ mc_packages }} state=present
+
+  - name: Install the memcached sysconfig file
+    template: src={{ item }}.sysconfig.j2 dest=/etc/sysconfig/{{ item }} owner=root group=root mode=0444
+    with_items:
+      - memcached
+    notify: Restart memcached
+
+  when: ansible_distribution_file_variety == "RedHat"
+  tags: [ 'memcache', 'memcached' ]
+
+- name: Ensure that the memcached service is started and enabled
+  service: name=memcached state=started enabled=yes
+  when: mc_enabled
+  tags: [ 'memcache', 'memcached' ]
+
+- name: Ensure that the memcached service is stopped
+  service: name=memcached state=stopped enabled=no
+  when: not mc_enabled
+  tags: [ 'memcache', 'memcached' ]
+
+- name: Disable memcached on deb systems
+  action: configfile path=/etc/default/memcached key=ENABLE_MEMCACHED value='no' syntax=shell
+  when:
+    - not mc_enabled
+    - ansible_distribution_file_variety == "Debian"
+  tags: [ 'memcache', 'memcached' ]
+

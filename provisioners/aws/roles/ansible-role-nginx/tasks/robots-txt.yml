@@ -1,0 +1,55 @@
+---
+- name: Install a global robots.txt
+  block:
+    - name: Install a robots.txt into the global webroot
+      template:
+        src: robots.txt.j2
+        dest: '{{ nginx_webroot }}/robots.txt'
+        owner: root
+        group: root
+        mode: 0444
+
+  when: nginx_install_robots_txt
+  tags: [ 'nginx', 'robots_txt' ]
+
+- name: Install a virtualhost specific robots.txt
+  block:
+    - name: Install a robots.txt into the virtualhost webroot
+      template:
+        src: robots.txt.j2
+        dest: '{{ item.root }}/robots.txt'
+        owner: root
+        group: root
+        mode: 0444
+      loop: '{{ nginx_virthosts }}'
+      when: nginx_webroot != item.root
+
+  when:
+    - nginx_install_robots_txt
+    - nginx_virthosts | length
+    - item.root is defined
+  tags: [ 'nginx', 'robots_txt' ]
+
+- name: Remove the global robots.txt
+  block:
+    - name: Remove the global robots.txt
+      file:
+        dest: '{{ nginx_webroot }}/robots.txt'
+        state: absent
+
+  when: not nginx_install_robots_txt
+  tags: [ 'nginx', 'robots_txt' ]
+
+- name: Remove the virtualhost specific robots.txt
+  block:
+    - name: Remove the robots.txt into the virtualhost webroot
+      file:
+        dest: '{{ item.root }}/robots.txt'
+        state: absent
+      loop: '{{ nginx_virthosts }}'
+
+  when:
+    - item.root is defined
+    - not nginx_install_robots_txt
+    - nginx_virthosts | length
+  tags: [ 'nginx', 'robots_txt' ]

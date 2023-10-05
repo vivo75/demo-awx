@@ -1,0 +1,68 @@
+---
+- block:
+  - name: Install the python3 EL mandatory packages
+    yum: name={{ py3_el_env_mandatory_pkg }} state={{ py3_env_pkgs_state }}
+
+  - name: Install the python3 EL additional packages
+    yum: name={{ py3_el_env_pkg }} state={{ py3_env_pkgs_state }}
+
+  - name: Find the pip3 executable
+    stat:
+      path: '/usr/local/bin/pip{{ py3_env_major_version }}'
+    register: pip3_path_executable
+
+  - name: Ensure that we have the latest pip, setuptools and wheel versions
+    pip:
+      executable: '/usr/local/bin/pip{{ py3_env_major_version }}'
+      name: '{{ py3_env_pip_default_pkgs }}'
+      state: latest
+    when: pip3_path_executable.stat.exists
+
+  - name: Ensure that we have the latest pip, setuptools and wheel versions
+    pip:
+      executable: '/usr/bin/pip{{ py3_env_major_version }}'
+      name: '{{ py3_env_pip_default_pkgs }}'
+      state: latest
+    when: not pip3_path_executable.stat.exists
+
+  - name: Install a list of binary pip3 packages in wheels format using /usr/local/bin/pip{{ py3_env_major_version }}
+    pip: executable=/usr/local/bin/pip{{ py3_env_major_version }} name={{ py3_env_wheel_pip_pkgs }} state={{ py3_pip_pkgs_state }}
+    environment:
+      LANG: en_US.UTF-8
+    when: pip3_path_executable.stat.exists
+
+  - name: Install a list of binary pip3 packages in wheels format using /usr/bin/pip{{ py3_env_major_version }}
+    pip: executable=/usr/bin/pip{{ py3_env_major_version }} name={{ py3_env_wheel_pip_pkgs }} state={{ py3_pip_pkgs_state }}
+    environment:
+      LANG: en_US.UTF-8
+    when: not pip3_path_executable.stat.exists
+
+  - name: Install a list of versioned pip3 packages on EL using /usr/local/bin/pip{{ py3_env_major_version }}
+    pip: executable=/usr/local/bin/pip{{ py3_env_major_version }} name={{ item.pkg }} version={{ item.version }} extra_args={{ item.extra_args | default('') }}
+    with_items: '{{ py3_env_versioned_pip_pkgs | default ([]) }}'
+    environment:
+      LANG: en_US.UTF-8
+    when: pip3_path_executable.stat.exists
+
+  - name: Install a list of versioned pip3 packages on EL using /usr/bin/pip{{ py3_env_major_version }}
+    pip: executable=/usr/bin/pip{{ py3_env_major_version }} name={{ item.pkg }} version={{ item.version }} extra_args={{ item.extra_args | default('') }}
+    with_items: '{{ py3_env_versioned_pip_pkgs | default ([]) }}'
+    environment:
+      LANG: en_US.UTF-8
+    when: not pip3_path_executable.stat.exists
+
+  - name: Install a list of pip3 packages on EL using /usr/local/bin/pip{{ py3_env_major_version }}
+    pip: executable=/usr/local/bin/pip{{ py3_env_major_version }} name={{ py3_env_pip_pkgs }} state={{ py3_pip_pkgs_state }}
+    environment:
+      LANG: en_US.UTF-8
+    when: pip3_path_executable.stat.exists
+
+  - name: Install a list of pip3 packages on EL using /usr/bin/pip{{ py3_env_major_version }}
+    pip: executable=/usr/bin/pip{{ py3_env_major_version }} name={{ py3_env_pip_pkgs }} state={{ py3_pip_pkgs_state }}
+    environment:
+      LANG: en_US.UTF-8
+    when: not pip3_path_executable.stat.exists
+
+  when: py3_env_install
+  tags: [ "python", "py3_env", "py3_env_pkgs", 'python3' ]
+

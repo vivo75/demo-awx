@@ -1,0 +1,22 @@
+galaxy_info:
+  author: Andrea Dell'Amico
+  namespace: adellam
+  role_name: pandoc
+  description: Role that installs pandoc
+  company: ISTI-CNR
+
+  license: EUPL 1.2+
+
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+        - jammy
+
+  galaxy_tags:
+    - pandoc
+
+dependencies: []

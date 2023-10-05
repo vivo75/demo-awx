@@ -1,0 +1,25 @@
+---
+- block:
+    - name: Install the python passlib library on deb based distributions
+      apt: pkg=python-passlib state=present cache_valid_time=3600
+      when:
+        - ansible_distribution_file_variety == "Debian"
+        - ansible_distribution_version is version_compare('18.04', '<=')
+
+    - name: Install the python passlib library on deb based distributions
+      apt: pkg=python3-passlib state=present cache_valid_time=3600
+      when:
+        - ansible_distribution_file_variety == "Debian"
+        - ansible_distribution_version is version_compare('18.04', '>=')
+
+    - name: Install the python passlib library on RH based distributions
+      yum: pkg=python-passlib state=present
+      when: ansible_distribution_file_variety == "RedHat"
+
+    - name: Create the htpasswd file needed by the basic auth
+      htpasswd: path={{ item.file | default ('/etc/nginx/htpasswd') }} name={{ item.name }} password={{ item.pwd }} state={{ item.state | default('present') }} crypt_scheme={{ item.crypt | default('sha256_crypt') }}
+      with_items: '{{ nginx_basic_auth_users }}'
+
+  when: nginx_basic_auth
+  tags: nginx
+

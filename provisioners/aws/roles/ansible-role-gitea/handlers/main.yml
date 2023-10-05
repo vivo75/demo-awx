@@ -1,0 +1,6 @@
+---
+- name: reload gitea
+  service: name=gitea state=reloaded
+
+- name: restart gitea
+  service: name=gitea state=restarted

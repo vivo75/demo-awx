@@ -1,0 +1,58 @@
+galaxy_info:
+  author: Andrea Dell'Amico
+  namespace: adellam
+  role_name: gitea
+  description: Role that installs gitea, https://gitea.io
+  company: ISTI-CNR
+
+  license: EUPL 1.2+
+
+  min_ansible_version: "2.8"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+        - jammy
+
+  galaxy_tags:
+    - git
+
+# dependencies:
+#   - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-postgresql.git
+#     when: gitea_local_postgresql
+#     name: postgresql
+#     version: master
+#     state: latest
+#   - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-mysql.git
+#     when: gitea_local_mysql
+#     name: mysql
+#     version: master
+#     state: latest
+#   - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-nginx.git
+#     when: gitea_nginx_frontend
+#     name: nginx
+#     version: master
+#     state: latest
+#   - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-redis.git
+#     when: gitea_local_redis
+#     name: redis
+#     version: master
+#     state: latest
+#   - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-memcached.git
+#     when: gitea_local_memcache
+#     name: memcached
+#     version: master
+#     state: latest
+#   - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-python3-environment.git
+#     when: gitea_install_viewer_addons
+#     name: python3-environment
+#     version: master
+#     state: latest
+#   - src: git+https://code-repo.d4science.org/InfraScience/ansible-role-pandoc.git
+#     when: gitea_install_viewer_addons
+#     name: pandoc
+#     version: master
+#     state: latest
+#    

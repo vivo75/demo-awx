@@ -1,0 +1,123 @@
+---
+- block:
+  - name: Create the gitea service user
+    user: name={{ gitea_user }} home=/srv/gitea createhome=yes shell=/bin/bash system=yes
+    when: gitea_create_service_user
+
+  - name: Create the gitea directory tree
+    file: dest={{ gitea_data_dir }}/{{ item }} state=directory owner={{ gitea_user }} group={{ gitea_group }}
+    with_items: '{{ gitea_data_subdirs }}'
+    when: gitea_create_service_user
+
+  - name: Create the gitea subdirs when we are using a pre existing user
+    file: dest={{ gitea_data_dir }}/{{ item }} state=directory owner={{ gitea_user }}
+    with_items: '{{ gitea_data_subdirs }}'
+    when: not gitea_create_service_user
+
+  - name: Create the gitea conf directory
+    file: dest={{ gitea_conf_dir }} state=directory owner=root group={{ gitea_group }} mode=0750
+
+  - name: Create the gitea socket directory
+    file:
+      dest: '{{ gitea_socket_dir }}'
+      state: directory
+      owner: '{{ gitea_user }}'
+      group: '{{ gitea_group }}'
+      mode: 0755
+
+  - name: Create the gitea log directory
+    file:
+      dest: '{{ gitea_log_dir }}'
+      state: directory
+      owner: '{{ gitea_user }}'
+      group: '{{ gitea_group }}'
+      mode: 0755
+
+  - name: Download the gitea binary
+    get_url:
+      url: '{{ gitea_download_url }}'
+      dest: '{{ gitea_bin_path }}'
+      owner: root
+      group: '{{ gitea_group }}'
+      mode: 0750
+    notify: restart gitea
+
+  - name: Force the download of the gitea binary to upgrade it
+    get_url:
+      url: '{{ gitea_download_url }}'
+      dest: '{{ gitea_bin_path }}'
+      owner: root
+      group: '{{ gitea_group }}'
+      mode: 0750
+      force: true
+    when: gitea_force_binary_download
+
+  - name: Install the required packages
+    package: state=present use=auto name={{ gitea_required_packages }}
+
+  - name: Install the gitea configuration file. At install time only
+    template: src=app.ini.j2 dest={{ gitea_conf_dir }}/app.ini owner={{ gitea_user }} group={{ gitea_group }} mode=0640 force=no
+    notify: restart gitea
+
+  - name: Change the gitea configuration. After the installation
+    ini_file:
+      path: '{{ gitea_conf_dir }}/app.ini'
+      section: '{{ item.section }}'
+      option: '{{ item.option }}'
+      value: '{{ item.value }}'
+      state: '{{ item.state }}'
+      owner: '{{ gitea_user }}'
+      group: '{{ gitea_group }}'
+      mode: '0640'
+      create: no
+    loop: '{{ gitea_app_configurations }}'
+    when: gitea_app_configurations is defined
+    notify: restart gitea
+    tags: [ 'git', 'gitea', 'gitea_conf' ]
+
+  - name: Prometheus metrics
+    ini_file:
+      path: '{{ gitea_conf_dir }}/app.ini'
+      section: '{{ item.section }}'
+      option: '{{ item.option }}'
+      value: '{{ item.value }}'
+      state: '{{ item.state }}'
+      owner: '{{ gitea_user }}'
+      group: '{{ gitea_group }}'
+      mode: '0640'
+      create: no
+    loop: '{{ gitea_prometheus_conf }}'
+    notify: restart gitea
+    tags: [ 'git', 'gitea', 'gitea_conf' ]
+
+  - name: Create the tmpfile entry for the gitea socket directory
+    template:
+      src: tmpfile_gitea.conf.j2
+      dest: /usr/lib/tmpfiles.d/gitea.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Create some custom subdirectories
+    file:
+      dest: '{{ gitea_data_dir }}/custom/{{ item }}'
+      state: directory
+      owner: '{{ gitea_user }}'
+    loop:
+      - 'templates/custom'
+      - 'public/css'
+      - 'public/components'
+    tags: [ 'git', 'gitea', 'gitea_conf' ]
+
+  - name: Install the gitea systemd unit
+    template: src=gitea.service.systemd.j2 dest=/etc/systemd/system/gitea.service
+    register: gitea_systemd_unit
+
+  - name: Reload the systemd configuration
+    command: systemctl daemon-reload
+    when: gitea_systemd_unit is changed
+
+  - name: Ensure that the gitea service is running and enabled
+    service: name=gitea state=started enabled=yes
+
+  tags: [ 'git', 'gitea' ]

@@ -1,0 +1,56 @@
+---
+- block:
+    - name: Create the nginx webroot if different from the default
+      file:
+        dest: '{{ nginx_webroot }}'
+        state: directory
+        mode: 0755
+      when: nginx_webroot != '/usr/share/nginx/html'
+
+  tags: [ 'nginx', 'virtualhost' ]
+
+- name: Install and enable the nginx virtualhost files on Deb based systems
+  block:
+    - name: Install the nginx virtualhost files
+      template:
+        src: nginx-virthost.j2
+        dest: '/etc/nginx/sites-available/{{ item.virthost_name }}'
+        owner: root
+        group: root
+        mode: 0444
+      loop: '{{ nginx_virthosts }}'
+      notify: Reload nginx
+
+    - name: Enable the nginx virtualhosts
+      file:
+        src: '/etc/nginx/sites-available/{{ item.virthost_name }}'
+        dest: '/etc/nginx/sites-enabled/{{ item.virthost_name }}'
+        state: link
+      loop: '{{ nginx_virthosts }}'
+      notify: Reload nginx
+
+  when: ansible_distribution_file_variety == "Debian"
+  tags: [ 'nginx', 'virtualhost' ]
+
+- name: Install and enable the nginx virtualhost files on RH based systems
+  block:
+  - name: Install the nginx virtualhost files
+    template:
+      src: nginx-virthost.j2
+      dest: '/etc/nginx/conf.d/{{ item.virthost_name }}.conf'
+      owner: root
+      group: root
+      mode: 0444
+    loop: '{{ nginx_virthosts }}'
+    notify: Reload nginx
+
+  - name: nginx must be able to network connect when used as a proxy
+    seboolean:
+      name: httpd_can_network_connect
+      state: yes
+      persistent: yes
+    loop: '{{ nginx_virthosts }}'
+    when: item.proxy_standard_setup is defined and item.proxy_standard_setup
+
+  when: ansible_distribution_file_variety == "RedHat"
+  tags: [ 'nginx', 'virtualhost' ]

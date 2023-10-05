@@ -1,0 +1,7 @@
+---
+pandoc_install_from_pandoc_org: true
+
+pandoc_pkg_version: 3.1.2
+pandoc_pkg_file: 'pandoc-{{ pandoc_pkg_version }}-1-{{ "amd64" if ansible_architecture == "x86_64" else "arm64" if ansible_architecture == "aarch64" else ansible_architecture }}.deb'
+pandoc_pkg_url: 'https://github.com/jgm/pandoc/releases/download/{{ pandoc_pkg_version }}/{{ pandoc_pkg_file }}'
+

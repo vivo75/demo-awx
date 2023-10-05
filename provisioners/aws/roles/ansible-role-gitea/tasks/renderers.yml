@@ -1,0 +1,167 @@
+---
+- name: Global renderers config
+  block:
+    - name: Global renderers config
+      ini_file:
+        path: '{{ gitea_conf_dir }}/app.ini'
+        section: '{{ item.section }}'
+        option: '{{ item.option }}'
+        value: '{{ item.value }}'
+        state: '{{ item.state }}'
+        owner: '{{ gitea_user }}'
+        group: '{{ gitea_group }}'
+        mode: '0640'
+        create: no
+      loop: '{{ gitea_renderers_global_conf }}'
+      when: gitea_install_viewer_addons
+      notify: restart gitea
+
+  tags: [ 'git', 'gitea', 'gitea_addons', 'gitea_conf', 'gitea_renderers' ]
+
+- name: Configure asciidoc
+  block:
+    - name: Configure asciidoc
+      ini_file:
+        path: '{{ gitea_conf_dir }}/app.ini'
+        section: '{{ item.section }}'
+        option: '{{ item.option }}'
+        value: '{{ item.value }}'
+        state: '{{ item.state }}'
+        owner: '{{ gitea_user }}'
+        group: '{{ gitea_group }}'
+        mode: '0640'
+        create: no
+      loop: '{{ gitea_markup_asciidoc_conf }}'
+      when: gitea_install_viewer_addons
+      notify: restart gitea
+
+  tags: [ 'git', 'gitea', 'gitea_addons', 'gitea_conf', 'gitea_asciidoc' ]
+
+- name: Configure jupyter markup
+  block:
+    - name: Configure jupyter markup
+      ini_file:
+        path: '{{ gitea_conf_dir }}/app.ini'
+        section: '{{ item.section }}'
+        option: '{{ item.option }}'
+        value: '{{ item.value }}'
+        state: '{{ item.state }}'
+        owner: '{{ gitea_user }}'
+        group: '{{ gitea_group }}'
+        mode: '0640'
+        create: no
+      loop: '{{ gitea_markup_jupyter_conf }}'
+      when: gitea_install_viewer_addons
+      notify: restart gitea
+
+    - name: Install the jupyter CSS
+      copy:
+        src: jupyter.css
+        dest: '{{ gitea_data_dir }}/custom/public/css/jupyter.css'
+        mode: 0444
+        owner: '{{ gitea_user }}'
+
+    - name: Install html template that loads the CSS
+      copy:
+        src: header.tmpl
+        dest: '{{ gitea_data_dir }}/custom/templates/custom/header.tmpl'
+        mode: 0444
+        owner: '{{ gitea_user }}'
+
+    - name: Check if the awesome fonts are installed
+      stat:
+        path: /usr/share/fonts-font-awesome
+      register: awesome_fonts_dir
+
+    - name: Link to the awesome fonts directory
+      file:
+        src: /usr/share/fonts-font-awesome
+        dest: '{{ gitea_data_dir }}/custom/public/components/font-awesome'
+        state: link\
+        owner: '{{ gitea_user }}'
+      when: awesome_fonts_dir.stat.exists
+
+  tags: [ 'git', 'gitea', 'gitea_addons', 'gitea_conf', 'gitea_jupyter' ]
+
+- name: Configure restructuredtext markup
+  block:
+    - name: Configure restructuredtext markup
+      ini_file:
+        path: '{{ gitea_conf_dir }}/app.ini'
+        section: '{{ item.section }}'
+        option: '{{ item.option }}'
+        value: '{{ item.value }}'
+        state: '{{ item.state }}'
+        owner: '{{ gitea_user }}'
+        group: '{{ gitea_group }}'
+        mode: '0640'
+        create: no
+      loop: '{{ gitea_markup_restructuredtext_conf }}'
+      when: gitea_install_viewer_addons
+      notify: restart gitea
+
+  tags: [ 'git', 'gitea', 'gitea_addons', 'gitea_conf', 'gitea_restructuredtext' ]
+
+- name: Configure sanitizer TeX markup
+  block:
+    - name: Configure sanitizer TeX markup
+      ini_file:
+        path: '{{ gitea_conf_dir }}/app.ini'
+        section: '{{ item.section }}'
+        option: '{{ item.option }}'
+        value: '{{ item.value }}'
+        state: '{{ item.state }}'
+        owner: '{{ gitea_user }}'
+        group: '{{ gitea_group }}'
+        mode: '0640'
+        create: no
+      loop: '{{ gitea_markup_sanitizer_tex_conf }}'
+      when: gitea_install_viewer_addons
+      notify: restart gitea
+
+  tags: [ 'git', 'gitea', 'gitea_addons', 'gitea_conf', 'gitea_sanitizer_tex' ]
+
+- name: Configure markdown markup
+  block:
+    - name: Configure markdown markup
+      ini_file:
+        path: '{{ gitea_conf_dir }}/app.ini'
+        section: '{{ item.section }}'
+        option: '{{ item.option }}'
+        value: '{{ item.value }}'
+        state: '{{ item.state }}'
+        owner: '{{ gitea_user }}'
+        group: '{{ gitea_group }}'
+        mode: '0640'
+        create: no
+      loop: '{{ gitea_markup_markdown_conf }}'
+      when: gitea_install_viewer_addons
+      notify: restart gitea
+
+  tags: [ 'git', 'gitea', 'gitea_addons', 'gitea_conf', 'gitea_markdown' ]
+
+- name: Configure docx markup
+  block:
+    - name: Configure the docx markup
+      ini_file:
+        path: '{{ gitea_conf_dir }}/app.ini'
+        section: '{{ item.section }}'
+        option: '{{ item.option }}'
+        value: '{{ item.value }}'
+        state: '{{ item.state }}'
+        owner: '{{ gitea_user }}'
+        group: '{{ gitea_group }}'
+        mode: '0640'
+        create: no
+      loop: '{{ gitea_markup_docx_conf }}'
+      notify: restart gitea
+
+    - name: Create the docx template
+      copy:
+        content: "$body$"
+        dest: '{{ gitea_data_dir }}/custom/templates/docx-basic.html'
+        owner: '{{ gitea_user }}'
+
+  when: gitea_install_viewer_addons
+  tags: [ 'git', 'gitea', 'gitea_addons', 'gitea_conf', 'gitea_docx' ]
+

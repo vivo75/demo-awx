@@ -1,0 +1,154 @@
+---
+#
+# https://gitea.io
+#
+# We use the server ssh daemon, and nginx in front of the service by default.
+# So we do not start in http mode and we do not use the embedded letsencrypt support
+#
+gitea_version:  1.19.4
+gitea_download_url: "https://dl.gitea.io/gitea/{{ gitea_version }}/gitea-{{ gitea_version }}-{{ ansible_system | lower }}-{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
+gitea_force_binary_download: False
+gitea_bin_path: /usr/local/bin/gitea
+
+gitea_conf_dir: /etc/gitea
+gitea_data_dir: /var/lib/gitea
+gitea_data_subdirs:
+  - custom
+  - data
+  - log
+
+gitea_log_dir: /var/log/gitea
+gitea_socket_dir: /run/gitea
+gitea_repository_data: '{{ gitea_data_dir }}/repositories'
+gitea_max_repository_per_user: 200
+
+gitea_server_protocol: unix
+gitea_hostname: '{{ ansible_fqdn }}'
+gitea_http_addr: '{{ gitea_socket_dir }}/gitea.sock'
+gitea_http_port: 3000
+gitea_root_url: https://{{ gitea_hostname }}
+
+# home, explore
+gitea_landing_page: explore
+gitea_create_service_user: True
+gitea_user: gitea
+gitea_group: '{{ gitea_user }}'
+gitea_run_mode: prod
+gitea_db: postgres
+gitea_local_postgresql: True
+gitea_local_mysql: False
+gitea_local_mariadb: False
+gitea_nginx_frontend: True
+gitea_local_redis: True
+gitea_local_memcache: True
+
+gitea_start_lfs: 'true'
+gitea_lfs_content_path: '{{ gitea_data_dir }}/data/lfs'
+#gitea_lfs_jwt_secret: put it into a vault file
+gitea_lfs_http_auth_expiry: 20m
+
+gitea_required_packages:
+  - git
+
+gitea_db_name: gitea
+gitea_db_user: gitea_u
+#gitea_db_pwd: put it into a vault file
+gitea_db_host: postgres.priv.isti.cnr.it
+gitea_db_port: 5432
+gitea_db_ssl_mode: 'disable'
+
+gitea_app_name: "Gitea"
+gitea_disable_registration: 'false'
+gitea_install_lock: 'false'
+gitea_mailer_enabled: False
+gitea_mail_from: gitea@localhost
+gitea_mailer_type: sendmail
+gitea_sendmail_path: /usr/sbin/sendmail
+gitea_cache_provider: memcache
+gitea_cache_host: '127.0.0.1:11211'
+gitea_session_provider: redis
+gitea_session_config: 'network=tcp,addr=127.0.0.1:6379,db=0,pool_size=100,idle_timeout=180'
+gitea_require_signin_view: 'false'
+gitea_users_page_enabled: 'false'
+
+gitea_install_viewer_addons: True
+gitea_py3_env_dpkg:
+  - jupyter
+  - asciidoctor
+  - pandoc
+  - python3-matplotlib
+  - python3-pandas
+  - python3-geopandas
+
+gitea_renderers_global_conf:
+  - { section: 'markdown', option: 'CUSTOM_URL_SCHEMES', value: 'data', state: 'present' }
+
+gitea_markup_asciidoc_enabled: 'true'
+gitea_markup_asciidoc_conf:
+  - { section: 'markup.asciidoc', option: 'ENABLED', value: '{{ gitea_markup_asciidoc_enabled }}', state: 'present' }
+  - { section: 'markup.asciidoc', option: 'FILE_EXTENSIONS', value: '.adoc,.asciidoc', state: 'present' }
+  - { section: 'markup.asciidoc', option: 'RENDER_COMMAND', value: '"asciidoctor -s -a showtitle --out-file=- -"', state: 'present' }
+  - { section: 'markup.asciidoc', option: 'IS_INPUT_FILE', value: 'false', state: 'present' }
+
+gitea_markup_jupyter_enabled: 'true'
+gitea_markup_jupyter_conf:
+  - { section: 'markup.jupyter', option: 'ENABLED', value: '{{ gitea_markup_jupyter_enabled }}', state: 'present' }
+  - { section: 'markup.jupyter', option: 'FILE_EXTENSIONS', value: '.ipynb', state: 'present' }
+  - { section: 'markup.jupyter', option: 'RENDER_COMMAND', value: '"jupyter nbconvert --stdout --to html --template basic"', state: 'present' }
+  - { section: 'markup.jupyter', option: 'IS_INPUT_FILE', value: 'true', state: 'present' }
+  - { section: 'markup.sanitizer.jupyter.rule1', option: 'ALLOW_ATTR', value: 'class', state: 'present' }
+  - { section: 'markup.sanitizer.jupyter.rule1', option: 'ELEMENT', value: 'div', state: 'present' }
+  - { section: 'markup.sanitizer.jupyter.rule1', option: 'REGEXP', value: '', state: 'present' }
+gitea_markup_docx_enabled: 'true'
+gitea_markup_docx_conf:
+  - { section: 'markup.docx', option: 'ENABLED', value: '{{ gitea_markup_docx_enabled }}', state: 'present' }
+  - { section: 'markup.docx', option: 'FILE_EXTENSIONS', value: '.docx', state: 'present' }
+  - { section: 'markup.docx', option: 'RENDER_COMMAND', value: '"pandoc --from docx --to html --self-contained --template {{ gitea_data_dir }}/custom/templates/docx-basic.html"', state: 'present' }
+  - { section: 'markup.sanitizer.docx', option: 'ALLOW_DATA_URI_IMAGES', value: 'true', state: 'present' }
+gitea_markup_restructuredtext_enabled: 'true'
+gitea_markup_restructuredtext_conf:
+  - { section: 'markup.restructuredtext', option: 'ENABLED', value: '{{ gitea_markup_restructuredtext_enabled }}', state: 'present' }
+  - { section: 'markup.restructuredtext', option: 'FILE_EXTENSIONS', value: '.rst', state: 'present' }
+  - { section: 'markup.restructuredtext', option: 'RENDER_COMMAND', value: '"timeout 30s pandoc +RTS -M512M -RTS -f rst"', state: 'present' }
+  - { section: 'markup.restructuredtext', option: 'IS_INPUT_FILE', value: 'false', state: 'present' }
+gitea_markup_sanitizer_tex_enabled: 'true'
+gitea_markup_sanitizer_tex_conf:
+  - { section: 'markup.sanitizer.TeX', option: 'ENABLED', value: '{{ gitea_markup_sanitizer_tex_enabled }}', state: 'present' }
+  - { section: 'markup.sanitizer.TeX', option: 'ELEMENT', value: 'span', state: 'present' }
+  - { section: 'markup.sanitizer.TeX', option: 'ALLOW_ATTR', value: 'class', state: 'present' }
+  - { section: 'markup.sanitizer.TeX', option: 'REGEXP', value: '^\s*((math(\s+|$)|inline(\s+|$)|display(\s+|$)))+', state: 'present' }
+gitea_markup_markdown_enabled: 'true'
+gitea_markup_markdown_conf:
+  - { section: 'markup.markdown', option: 'ENABLED', value: '{{ gitea_markup_markdown_enabled }}', state: 'present' }
+  - { section: 'markup.markdown', option: 'FILE_EXTENSIONS', value: '.md,.markdown', state: 'present' }
+  - { section: 'markup.markdown', option: 'RENDER_COMMAND', value: 'pandoc -f markdown -t html --katex', state: 'present' }
+
+gitea_prometheus_metrics: 'false'
+#gitea_prometheus_bearer_token: put it into a vault file
+gitea_prometheus_bearer_token: ''
+gitea_prometheus_conf:
+  - { section: 'metrics', option: 'ENABLED', value: '{{ gitea_prometheus_metrics }}', state: 'present' }
+  - { section: 'metrics', option: 'TOKEN', value: '{{ gitea_prometheus_bearer_token }}', state: 'present' }
+
+gitea_log_level: Info
+
+gitea_app_configurations:
+  - { section: 'log', option: 'ROOT_PATH', value: '{{ gitea_log_dir }}', state: 'present' }
+  - { section: 'log', option: 'COLORIZE', value: 'false', state: 'present' }
+  - { section: 'log', option: 'LEVEL', value: '{{ gitea_log_level }}', state: 'present' }
+  - { section: 'log', option: 'FILE_NAME', value: '{{ gitea_log_dir }}/gitea.log', state: 'present' }
+  - { section: 'log', option: 'ENABLE_XORM_LOG', value: 'true', state: 'present' }
+  - { section: 'log', option: 'ENABLE_ACCESS_LOG', value: 'true', state: 'present' }
+  - { section: 'log.sublogger.router', option: 'FILE_NAME', value: '{{ gitea_log_dir }}/router.log', state: 'present' }
+  - { section: 'log.sublogger.access', option: 'FILE_NAME', value: '{{ gitea_log_dir }}/access.log', state: 'present' }
+  - { section: 'log.sublogger.xorm', option: 'FILE_NAME', value: '{{ gitea_log_dir }}/xorm.log', state: 'present' }
+  - { section: 'database', option: 'LOG_SQL', value: 'false', state: 'present' }
+  - { section: 'security', option: 'CSRF_COOKIE_HTTP_ONLY', value: 'true', state: 'present'}
+  - { section: 'session', option: 'SAME_SITE', value: 'lax', state: 'present'}
+  - { section: 'session', option: 'COOKIE_SECURE', value: 'false', state: 'present'}
+#  - { section: 'mailer', option: 'ENABLED', value: 'true', state: 'present' }
+#  - { section: 'mailer', option: 'FROM', value: '{{ gitea_mail_from }}', state: 'present' }
+#  - { section: 'mailer', option: 'MAILER_TYPE', value: '{{ gitea_mailer_type }}', state: 'present' }
+#  - { section: 'mailer', option: 'SENDMAIL_PATH', value: '{{ gitea_sendmail_path }}', state: 'present' }
+#  - { section: 'metrics', option: 'ENABLED', value: 'true', state: 'present' }
+#  - { section: 'metrics', option: 'TOKEN', value: '{{ gitea_prometheus_bearer_token }}', state: 'present' }

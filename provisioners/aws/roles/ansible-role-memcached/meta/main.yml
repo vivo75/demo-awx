@@ -1,0 +1,28 @@
+galaxy_info:
+  author: Andrea Dell'Amico
+  description: Systems Architect
+  company: ISTI-CNR
+
+  issue_tracker_url: https://redmine-s2i2s.isti.cnr.it/projects/provisioning
+
+  license: EUPL 1.2+
+
+  min_ansible_version: 2.8
+
+  # To view available platforms and versions (or releases), visit:
+  # https://galaxy.ansible.com/api/v1/platforms/
+  #
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+    - name: EL
+      versions:
+        - 7
+
+  galaxy_tags:
+    - memcache
+    - memcached
+
+dependencies: []
+

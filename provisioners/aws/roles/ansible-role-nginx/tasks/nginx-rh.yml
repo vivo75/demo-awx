@@ -1,0 +1,25 @@
+---
+- block:
+  - name: Install the nginx web server
+    yum: pkg=nginx state={{ nginx_package_state }}
+
+  - name: nginx must be able to network connect and relay when used as a proxy
+    seboolean:
+      name: httpd_can_network_connect
+      state: 1
+      persistent: yes
+    with_items:
+      - 'httpd_can_network_connect'
+      - 'httpd_can_network_relay'
+    when: letsencrypt_acme_install is defined and letsencrypt_acme_install
+    tags: [ 'nginx', 'nginx_selinux' ]
+
+  - name: Give nginx the ability to set RLIMIT_NOFILE
+    seboolean:
+      name: httpd_setrlimit
+      state: 1
+      persistent: yes
+    tags: [ 'nginx', 'nginx_selinux' ]
+
+  when: ansible_distribution_file_variety == "RedHat"
+  tags: [ 'nginx' ]

@@ -1,0 +1,5 @@
+---
+- import_tasks: py3_deb.yml
+  when: ansible_distribution_file_variety == "Debian"
+- import_tasks: py3_el.yml
+  when: ansible_distribution_file_variety == "RedHat"

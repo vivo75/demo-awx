@@ -1,0 +1,66 @@
+pid /run/nginx.pid;
+{% if ansible_distribution_file_variety == "Debian" %}
+user www-data;
+{% if nginx_use_ppa or ansible_distribution_major_version >= '16' %}
+worker_processes auto;
+include /etc/nginx/modules-enabled/*.conf;
+
+{% else %}
+worker_processes {{ nginx_workers }};
+{% endif %}
+{% endif %}
+
+{% if ansible_distribution_file_variety == "RedHat" %}
+user nginx;
+worker_processes auto;
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+{% endif %}
+
+events {
+    worker_connections {{ nginx_worker_connections }};
+    multi_accept {{ nginx_multi_accept }};
+}
+worker_rlimit_nofile    {{ nginx_worker_rlimit_nofile }};
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout {{ nginx_keepalive_timeout }};
+    send_timeout {{ nginx_send_timeout }};
+    types_hash_max_size 2048;
+    server_tokens {{ nginx_server_tokens }};
+    # server_names_hash_bucket_size 64;
+    # server_name_in_redirect off;
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    client_header_buffer_size {{ nginx_client_header_buffer_size }};
+    client_body_buffer_size {{ nginx_client_body_buffer_size }};
+    large_client_header_buffers {{ nginx_large_client_header_buffers }};
+    ##
+    # Logging Settings
+    ##
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+{% if nginx_enable_compression %}
+    include /etc/nginx/snippets/nginx-compression.conf;
+{% endif %}
+{% if nginx_websockets_support %}
+    include /etc/nginx/snippets/nginx-websockets.conf;
+{% endif %}
+    include /etc/nginx/conf.d/*.conf;
+
+{% if ansible_distribution_file_variety == "RedHat" %}
+    # Load configuration files for the default server block.
+    include /etc/nginx/default.d/*.conf;
+{% endif %}
+
+{% if ansible_distribution_file_variety == "Debian" %}
+    include /etc/nginx/sites-enabled/*;
+{% endif %}
+}

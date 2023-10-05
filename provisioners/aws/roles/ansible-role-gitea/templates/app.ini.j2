@@ -1,0 +1,72 @@
+APP_NAME = {{ gitea_app_name }}
+RUN_USER = {{ gitea_user }}
+RUN_MODE= {{ gitea_run_mode }}
+
+[repository]
+ROOT = {{ gitea_repository_data }}
+;; Global limit of repositories per user, applied at creation time. -1 means no limit
+MAX_CREATION_LIMIT = {{ gitea_max_repository_per_user }}
+
+[server]
+PROTOCOL = {{ gitea_server_protocol }}
+HTTP_ADDR = {{ gitea_http_addr }}
+LANDING_PAGE = {{ gitea_landing_page }}
+LFS_START_SERVER = {{ gitea_start_lfs }}
+LFS_HTTP_AUTH_EXPIRY = {{ gitea_lfs_http_auth_expiry }}
+SSH_DOMAIN           = {{ gitea_hostname }}
+DOMAIN               = {{ gitea_hostname }}
+HTTP_PORT            = {{ gitea_http_port }}
+ROOT_URL             = {{ gitea_root_url }}
+DISABLE_SSH          = false
+SSH_PORT             = 22
+OFFLINE_MODE         = false
+
+[lfs]
+PATH = {{ gitea_lfs_content_path }}
+
+[database]
+DB_TYPE = {{ gitea_db }}
+HOST = {{ gitea_db_host }}:{{ gitea_db_port }}
+NAME = {{ gitea_db_name }}
+USER = {{ gitea_db_user }}
+PASSWD = {{ gitea_db_pwd }}
+SSL_MODE = {{ gitea_db_ssl_mode }}
+LOG_SQL = false 
+
+[security]
+INSTALL_LOCK = {{ gitea_install_lock }}
+
+[service]
+DISABLE_REGISTRATION = {{ gitea_disable_registration }}
+NO_REPLY_ADDRESS = {{ gitea_mail_from }}
+DEFAULT_KEEP_EMAIL_PRIVATE = true
+DEFAULT_ALLOW_CREATE_ORGANIZATION = false
+DEFAULT_ORG_VISIBILITY = public
+DEFAULT_ORG_MEMBER_VISIBLE = false
+
+[service.explore]
+REQUIRE_SIGNIN_VIEW = {{ gitea_require_signin_view }}
+DISABLE_USERS_PAGE = {{ gitea_users_page_enabled }}
+
+{% if gitea_mailer_enabled %}
+[mailer]
+ENABLED = true
+FROM = {{ gitea_mail_from }}
+MAILER_TYPE = {{ gitea_mailer_type }}
+SENDMAIL_PATH = {{ gitea_sendmail_path }}
+{% endif %}
+
+[cache]
+ADAPTER = {{ gitea_cache_provider }}
+HOST = {{ gitea_cache_host }}
+
+[session]
+PROVIDER = {{ gitea_session_provider }}
+PROVIDER_CONFIG = {{ gitea_session_config }}
+
+[other]
+SHOW_FOOTER_VERSION = false
+SHOW_FOOTER_TEMPLATE_LOAD_TIME = false
+
+[log]
+LEVEL = {{ gitea_log_level }}

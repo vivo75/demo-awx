@@ -1,0 +1,21 @@
+---
+py3_env_install: true
+py3_env_ppa_enabled: false
+py3_env_major_version: 3
+# We calculate the minor number is some cases.
+py3_env_minor_version: 6
+py3_env_version: '{{ py3_env_major_version }}.{{py3_env_minor_version }}'
+py3_env_pkgs_state: present
+py3_pip_pkgs_state: present
+py3_env_site: false
+
+py3_env_dpkg: []
+# Ugly. Don't do that
+py3_deb_info_to_remove: []
+# - '/usr/lib/python3/dist-packages/geopandas-0.3.0.egg-info'
+
+py3_el_env_pkg: []
+py3_env_wheel_pip_pkgs: []
+py3_env_pip_pkgs:
+  - lxml
+py3_env_versioned_pip_pkgs: []

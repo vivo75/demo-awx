@@ -1,0 +1,56 @@
+{% if letsencrypt_acme_install is defined and letsencrypt_acme_install %}
+ssl_certificate {{ letsencrypt_acme_certs_dir }}/fullchain;
+ssl_certificate_key {{ letsencrypt_acme_certs_dir }}/privkey;
+{% else %}
+ssl_certificate {{ nginx_ssl_cert_file | default('/etc/nginx/ssl/server.crt') }};
+ssl_certificate_key {{ nginx_ssl_cert_key | default ('/etc/nginx/ssl/server.key') }};
+{% endif %}
+ssl_session_cache shared:SSL:{{ nginx_ssl_session_cache_size }};
+ssl_session_timeout {{ nginx_ssl_session_timeout }};
+ssl_dhparam {{ pki_dir }}/nginx/dhparams.pem;
+{% if nginx_ssl_level == 'old' %}
+{% if ansible_distribution_version is version_compare('18.04', '>=') %}
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+{% else %}
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+{% endif %}
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA;
+ssl_prefer_server_ciphers on;
+{% endif %}
+{% if nginx_ssl_level == 'intermediate' %}
+{% if ansible_distribution_version is version_compare('18.04', '>=') %}
+ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+{% else %}
+ssl_protocols TLSv1.1 TLSv1.2;
+{% endif %}
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA;
+ssl_prefer_server_ciphers off;
+{% endif %}
+{% if nginx_ssl_level == 'modern' %}
+ssl_session_tickets off;
+# modern configuration. tweak to your needs.
+{% if ansible_distribution_version is version_compare('18.04', '>=') %}
+ssl_protocols TLSv1.2 TLSv1.3;
+{% else %}
+ssl_protocols TLSv1.2;
+{% endif %}
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+ssl_prefer_server_ciphers off;
+{% endif %}
+{% if ansible_distribution_version is version_compare('14.04', '>=') %}
+{% if nginx_ssl_stapling %}
+ssl_stapling on;
+ssl_stapling_verify on;
+{% endif %}
+{% if letsencrypt_acme_install is defined and letsencrypt_acme_install %}
+ssl_trusted_certificate {{ letsencrypt_acme_certs_dir }}/fullchain;
+{% else %}
+{% if ansible_distribution_file_variety == "Debian" %}
+ssl_trusted_certificate {{ nginx_ssl_fullchain_file | default('/etc/ssl/certs/ca-certificates.crt') }};
+{% if ansible_distribution_file_variety == "RedHat" %}
+ssl_trusted_certificate {{ nginx_ssl_fullchain_file | default('/etc/pki/tls/cert.pem') }};
+{% endif %}
+{% endif %}
+{% endif %}
+add_header Strict-Transport-Security "max-age={{ nginx_strict_transport_security_expire }}{% if nginx_strict_transport_security_include_subdomains %}; includeSubdomains{% endif %}";
+{% endif %}

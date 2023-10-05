@@ -1,0 +1,7 @@
+---
+nginx_use_common_virthost: True
+redis_install: True
+http_port: 80
+https_port: 443
+py3_env_dpkg: '{{ gitea_py3_env_dpkg }}'
+

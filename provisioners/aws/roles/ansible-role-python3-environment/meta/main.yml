@@ -1,0 +1,25 @@
+galaxy_info:
+  description: Role that installs python3 and optionally its modules
+  author: Andrea Dell'Amico
+  role_name: python3_environment
+  company: ISTI-CNR
+  license: EUPL 1.2+
+  min_ansible_version: '2.8'
+
+  issue_tracker_url: https://redmine-s2i2s.isti.cnr.it/projects/provisioning
+  platforms:
+    - name: Ubuntu
+      versions:
+        - trusty
+        - bionic
+        - focal
+        - jammy
+    - name: EL
+      versions:
+        - '7'
+        - '8'
+
+  galaxy_tags:
+    - python
+
+dependencies: []

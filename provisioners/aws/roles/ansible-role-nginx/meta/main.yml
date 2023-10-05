@@ -1,0 +1,27 @@
+galaxy_info:
+  author: Andrea Dell'Amico
+  description: Role that installs and configures nginx <https://nginx.org>
+  company: ISTI-CNR
+  namespace: adellam
+  role_name: nginx
+  license: EUPL 1.2+
+
+  min_ansible_version: "2.9"
+  #
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+        - jammy
+
+  galaxy_tags:
+    - nginx
+
+dependencies:
+  - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-ldap-client-config.git
+    version: master
+    name: ldap-client-config
+    state: latest
+    when: nginx_use_ldap_pam_auth
+

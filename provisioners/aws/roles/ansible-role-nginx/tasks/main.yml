@@ -1,0 +1,26 @@
+---
+- import_tasks: nginx-deb.yml
+  when: ansible_distribution_file_variety == "Debian"
+- import_tasks: nginx-rh.yml
+  when: ansible_distribution_file_variety == "RedHat"
+- import_tasks: nginx-config.yml
+- import_tasks: nginx-virtualhosts.yml
+  when: nginx_virthosts | length
+- import_tasks: robots-txt.yml
+- import_tasks: nginx-logrotate.yml
+- import_tasks: nginx-letsencrypt.yml
+  when: letsencrypt_acme_install is defined and letsencrypt_acme_install
+- import_tasks: basic-auth.yml
+- import_tasks: pam-ldap.yml
+
+- name: Ensure that the webserver is running and enabled at boot time
+  service: name=nginx state=started enabled=yes
+  when: nginx_enabled
+  ignore_errors: True
+  tags: nginx
+
+- name: Ensure that the webserver is stopped and disabled
+  service: name=nginx state=stopped enabled=no
+  when: not nginx_enabled
+  ignore_errors: True
+  tags: nginx

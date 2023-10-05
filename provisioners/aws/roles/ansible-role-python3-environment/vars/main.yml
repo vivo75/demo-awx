@@ -1,0 +1,19 @@
+---
+py3_ppa: 'ppa:deadsnakes/ppa'
+
+py3_env_mandatory_dpkg:
+  - 'python{{ py3_env_version }}'
+  - 'python{{ py3_env_version }}-venv'
+  - 'python{{ py3_env_version }}-dev'
+
+py3_env_pip_default_pkgs:
+  - 'pip'
+  - 'setuptools'
+  - 'wheel'
+
+py3_el_env_version: '{{ py3_env_major_version }}{{py3_env_minor_version }}'
+py3_el_env_mandatory_pkg:
+  - 'python{{ py3_env_major_version }}'
+  - 'python{{ py3_env_major_version }}-pip'
+  - 'python{{ py3_env_major_version }}-setuptools'
+  - "python{{ py3_env_major_version }}-virtualenv"
