@@ -1,0 +1,34 @@
+---
+
+# require:
+# ansible-galaxy role install atosatto.gitea
+# ansible-playbook -v --check  -iLABgitea, install-gitea.yml
+
+- hosts: all
+  gather_facts: no
+  become: true
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Update system
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        update_cache: yes
+    - name: Add packages
+      ansible.builtin.apt:
+        pkg:
+        - gnupg2
+
+- hosts: all
+  gather_facts: yes
+  become: true
+  vars_files:
+    - vars.yml
+
+  roles:
+    - ansible-role-pandoc
+    - ansible-role-memcached
+    - ansible-role-redis
+    - ansible-role-postgresql
+    - ansible-role-gitea

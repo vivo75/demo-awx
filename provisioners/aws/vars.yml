@@ -1,0 +1,26 @@
+---
+
+postgresql_hba_entries:
+  - { type: local, database: all, user: postgres, auth_method: peer }
+  - { type: local, database: all, user: all, auth_method: peer }
+  - { type: host, database: all, user: all, address: '127.0.0.1/8', auth_method: md5 }
+  - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
+
+postgresql_databases:
+  - name: gitea
+    owner: gitea_u
+
+postgresql_users:
+  - name: gitea_u
+    db: gitea
+    password: ThisIsTemporary
+
+gitea_version: 1.21
+gitea_hostname: 'tmpgitea.f1r.eu'
+gitea_db_pwd: ThisIsTemporary
+
+gitea_db_host: localhost
+gitea_db_port: 5432
+gitea_db_ssl_mode: 'disable'
+
+gitea_server_protocol: 'http+unix'
