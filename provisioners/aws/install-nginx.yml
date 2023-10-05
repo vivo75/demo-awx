@@ -1,7 +1,4 @@
 ---
-
-# require:
-# ansible-galaxy role install atosatto.gitea
 # ansible-playbook -v -iLABgitea, install-nginx.yml
 
 - hosts: all

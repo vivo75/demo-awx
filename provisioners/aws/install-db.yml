@@ -1,5 +1,5 @@
 ---
-# ansible-playbook -v -iLABgitea, install-gitea.yml
+# ansible-playbook -v -iLABgitea, install-db.yml
 
 - hosts: all
   gather_facts: no
@@ -9,11 +9,9 @@
   tasks:
     - name: Update system
       ansible.builtin.apt:
+        name: "*"
+        state: latest
         update_cache: yes
-    - name: Add packages
-      ansible.builtin.apt:
-        pkg:
-        - gnupg2
 
 - hosts: all
   gather_facts: yes
@@ -22,7 +20,4 @@
     - vars.yml
 
   roles:
-    - ansible-role-memcached
-    - ansible-role-redis
-    - ansible-role-gitea
-    - ansible-role-nginx
+    - ansible-role-postgresql

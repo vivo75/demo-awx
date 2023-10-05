@@ -7,14 +7,20 @@ postgresql_hba_entries:
   - { type: local, database: all, user: all, auth_method: peer }
   - { type: host, database: all, user: all, address: '127.0.0.1/8', auth_method: md5 }
   - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
+  - { type: host, database: all, user: all, address: '172.16.32.0/24', auth_method: md5 }
 
 postgresql_databases:
   - name: gitea
     owner: gitea_u
+  - name: k3s
+    owner: k3s_u
 
 postgresql_users:
   - name: gitea_u
     db: gitea
+    password: ThisIsTemporary
+  - name: k3s_u
+    db: k3s
     password: ThisIsTemporary
 
 ############## gitea ##############
