@@ -11,7 +11,7 @@
 - import_tasks: nginx-letsencrypt.yml
   when: letsencrypt_acme_install is defined and letsencrypt_acme_install
 - import_tasks: basic-auth.yml
-- import_tasks: pam-ldap.yml
+#- import_tasks: pam-ldap.yml
 
 - name: Ensure that the webserver is running and enabled at boot time
   service: name=nginx state=started enabled=yes

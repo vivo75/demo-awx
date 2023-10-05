@@ -18,10 +18,10 @@ galaxy_info:
   galaxy_tags:
     - nginx
 
-dependencies:
-  - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-ldap-client-config.git
-    version: master
-    name: ldap-client-config
-    state: latest
-    when: nginx_use_ldap_pam_auth
-
+# dependencies:
+#   - src: git+https://gitea-s2i2s.isti.cnr.it/ISTI-ansible-roles/ansible-role-ldap-client-config.git
+#     version: master
+#     name: ldap-client-config
+#     state: latest
+#     when: nginx_use_ldap_pam_auth
+# 

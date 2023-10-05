@@ -1,10 +1,13 @@
 ---
+
+pki_dir: '/etc/pki'
+
 nginx_enabled: true
 nginx_use_ppa: false
 nginx_ppa_repo: ppa:nginx/stable
 nginx_use_nginx_org_repo: false
 nginx_org_repo_key: 'https://nginx.org/keys/nginx_signing.key'
-nginx_org_repo: 'deb http://nginx.org/packages/ubuntu/ bionic nginx'
+nginx_org_repo: 'deb http://nginx.org/packages/debian/ bookworm nginx'
 nginx_package_state: present
 
 nginx_org_modules: []

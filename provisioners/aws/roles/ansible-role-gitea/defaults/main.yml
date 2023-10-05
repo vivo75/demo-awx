@@ -137,8 +137,8 @@ gitea_app_configurations:
   - { section: 'log', option: 'COLORIZE', value: 'false', state: 'present' }
   - { section: 'log', option: 'LEVEL', value: '{{ gitea_log_level }}', state: 'present' }
   - { section: 'log', option: 'FILE_NAME', value: '{{ gitea_log_dir }}/gitea.log', state: 'present' }
-  - { section: 'log', option: 'ENABLE_XORM_LOG', value: 'true', state: 'present' }
-  - { section: 'log', option: 'ENABLE_ACCESS_LOG', value: 'true', state: 'present' }
+  - { section: 'log.logger.xorm', option: 'MODE', value: 'console', state: 'present' }
+  - { section: 'log.logger.access', option: 'MODE', value: 'console', state: 'present' }
   - { section: 'log.sublogger.router', option: 'FILE_NAME', value: '{{ gitea_log_dir }}/router.log', state: 'present' }
   - { section: 'log.sublogger.access', option: 'FILE_NAME', value: '{{ gitea_log_dir }}/access.log', state: 'present' }
   - { section: 'log.sublogger.xorm', option: 'FILE_NAME', value: '{{ gitea_log_dir }}/xorm.log', state: 'present' }
