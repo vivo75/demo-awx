@@ -121,6 +121,24 @@ resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i002" {
   tags = merge( local.common_tags, { Name = "i002" } )
 }
 
+resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i003" {
+  security_group_id = aws_security_group.demoawx.id
+  cidr_ipv4   = "172.16.32.0/22"
+  from_port   = 80
+  ip_protocol = "tcp"
+  to_port     = 80
+  tags = merge( local.common_tags, { Name = "i003" } )
+}
+
+resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i004" {
+  security_group_id = aws_security_group.demoawx.id
+  cidr_ipv4   = "0.0.0.0/0"
+  from_port   = 80
+  ip_protocol = "tcp"
+  to_port     = 80
+  tags = merge( local.common_tags, { Name = "i004" } )
+}
+
 resource "aws_vpc_security_group_egress_rule" "sg-demoawx-e001" {
   security_group_id = aws_security_group.demoawx.id
   cidr_ipv4   = "0.0.0.0/0"

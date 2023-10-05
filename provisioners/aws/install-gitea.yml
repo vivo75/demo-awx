@@ -2,7 +2,7 @@
 
 # require:
 # ansible-galaxy role install atosatto.gitea
-# ansible-playbook -v --check  -iLABgitea, install-gitea.yml
+# ansible-playbook -v -iLABgitea, install-gitea.yml
 
 - hosts: all
   gather_facts: no
@@ -27,8 +27,8 @@
     - vars.yml
 
   roles:
-    - ansible-role-pandoc
     - ansible-role-memcached
     - ansible-role-redis
     - ansible-role-postgresql
     - ansible-role-gitea
+    - ansible-role-nginx

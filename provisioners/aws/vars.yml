@@ -1,5 +1,7 @@
 ---
 
+############## postgres ##############
+
 postgresql_hba_entries:
   - { type: local, database: all, user: postgres, auth_method: peer }
   - { type: local, database: all, user: all, auth_method: peer }
@@ -15,8 +17,10 @@ postgresql_users:
     db: gitea
     password: ThisIsTemporary
 
+############## gitea ##############
+
 gitea_version: 1.21
-gitea_hostname: 'tmpgitea.f1r.eu'
+gitea_hostname: 'git01.f1r.eu'
 gitea_db_pwd: ThisIsTemporary
 
 gitea_db_host: localhost
@@ -24,3 +28,54 @@ gitea_db_port: 5432
 gitea_db_ssl_mode: 'disable'
 
 gitea_server_protocol: 'http+unix'
+
+############## nginx ##############
+
+pki_dir: '/etc/pki'
+letsencrypt_acme_install: true
+letsencrypt_acme_certs_dir: '/etc/letsencrypt/'
+letsencrypt_acme_services_scripts_dir: '/etc/letsencrypt/scripts'
+
+nginx_strict_transport_security_expire: 15768000
+nginx_strict_transport_security_include_subdomains: false
+nginx_workers: 2
+nginx_worker_connections: 128
+
+nginx_behind_haproxy_settings: false
+# nginx_cors_acl_origin: 'http?://(localhost)'
+
+# nginx_virthosts:
+#   - virthost_name: git01.f1r.eu
+#     plain_http_enabled: true
+#     listen: 80
+#     server_name: git01.f1r.eu
+#     server_aliases: ''
+#     index: index.html
+#     upstream_backends:
+#       - name: gitea
+#         servers:
+#           - unix:/run/gitea/gitea.sock
+#     ssl_enabled: false
+#     ssl_only: false
+#     #ssl_letsencrypt_certs: '{{ nginx_letsencrypt_managed }}'
+#     server_tokens: 'off'
+#     additional_options: []
+#     proxy_standard_setup: true
+#     proxy_global_additional_options:
+#       - 'proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache:30m max_size=250m'
+#     locations:
+#       - location: /
+#         target: http://gitea/
+#
+#         # location /_/static/assets/ {
+#         #     alias /var/lib/gitea/custom/public/;
+#         # }
+#
+#         # location / {
+#         #         proxy_pass http://gitea/;
+#         #         client_max_body_size 512M;
+#         #         proxy_set_header Host $host;
+#         #         proxy_set_header X-Real-IP $remote_addr;
+#         #         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#         #         proxy_set_header X-Forwarded-Proto $scheme;
+        # }

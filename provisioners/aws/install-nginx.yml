@@ -1,0 +1,138 @@
+---
+
+# require:
+# ansible-galaxy role install atosatto.gitea
+# ansible-playbook -v -iLABgitea, install-nginx.yml
+
+- hosts: all
+  gather_facts: no
+  become: true
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Update system
+      ansible.builtin.apt:
+        update_cache: yes
+    - name: Add packages
+      ansible.builtin.apt:
+        pkg:
+        - nginx
+        - nginx-full
+        - python3-certbot-nginx
+
+- hosts: all
+  gather_facts: yes
+  become: true
+  vars_files:
+    - vars.yml
+
+  roles:
+    - ansible-role-nginx
+
+
+
+- hosts: all
+  gather_facts: no
+  become: true
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Install and enable the nginx virtualhost files on Deb based systems
+      block:
+        - name: Install the nginx virtualhost files
+          copy:
+            content: |2
+              proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache:30m max_size=250m;
+
+              upstream gitea
+              {
+                server unix:/run/gitea/gitea.sock;
+              }
+
+              server
+              {
+                listen 80;
+                server_name git01.f1r.eu ;
+                location ~ /\.(?!well-known).* {
+                   deny all;
+                   access_log off;
+                   log_not_found off;
+                   return 404;
+                }
+
+                include /etc/nginx/snippets/letsencrypt-proxy.conf;
+
+                access_log /var/log/nginx/git01.f1r.eu_access.log;
+
+                error_log /var/log/nginx/git01.f1r.eu_error.log;
+
+                server_tokens off;
+
+                root /var/lib/gitea/custom/public/;
+                index index.html;
+                error_page 500 502 503 504 /50x.html;
+                location = /50x.html
+                {
+                  root /usr/share/nginx/html;
+                }
+                location = /favicon.ico
+                {
+                  log_not_found off;
+                  access_log off;
+                }
+                location = /robots.txt
+                {
+                  allow all;
+                  log_not_found off;
+                  access_log off;
+                }
+
+                location ~ jupiter\.css
+                {
+                  root /var/lib/gitea/custom/public/;
+                }
+
+                client_max_body_size 100M;
+                client_body_timeout 240s;
+
+                include /etc/nginx/snippets/nginx-proxy-params.conf;
+
+                location /_/static/assets/
+                {
+                  alias /var/lib/gitea/custom/public/;
+                }
+
+                location /
+                {
+                  proxy_pass http://gitea/;
+                  client_max_body_size 512M;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                }
+              }
+
+
+            dest: '/etc/nginx/sites-available/git01.f1r.eu'
+            owner: root
+            group: root
+            mode: 0444
+          notify: Reload nginx
+
+        - name: Enable the nginx virtualhosts
+          file:
+            src: '/etc/nginx/sites-available/git01.f1r.eu'
+            dest: '/etc/nginx/sites-enabled/git01.f1r.eu'
+            state: link
+          notify: Reload nginx
+
+      when: ansible_distribution_file_variety == "Debian"
+      tags: [ 'nginx', 'virtualhost' ]
+
+  handlers:
+    - name: Reload nginx
+      service: name=nginx state=reloaded
+
+    - name: Restart nginx
+      service: name=nginx state=restarted
