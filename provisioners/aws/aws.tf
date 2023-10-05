@@ -5,9 +5,14 @@
 ############################## import ##############################
 
 
+# import {
+#   to = aws_vpc.demoawx_vpc
+#   id = "vpc-0ae16271e4333ead2"
+# }
+
 import {
-  to = aws_vpc.demoawx_vpc
-  id = "vpc-0ae16271e4333ead2"
+  to = aws_security_group.demoawx
+  id = "sg-054e7c92f0965eb59"
 }
 
 ############################## initialization ##############################
@@ -26,6 +31,7 @@ provider "aws" {
   region = "eu-south-1"
 }
 
+# ami = "ami-0100bd16cd78243d8"
 data "aws_ami" "git01" {
   most_recent = true
   owners      = ["136693071363"]
@@ -39,6 +45,19 @@ data "aws_ami" "git01" {
   }
 }
 
+# # ami-0d8270d86f77e72b2
+# data "aws_ami" "git01" {
+#   most_recent = true
+#   owners      = ["071630900071"]
+#   filter {
+#     name   = "architecture"
+#     values = ["arm64"]
+#   }
+#   filter {
+#     name   = "name"
+#     values = ["al2023-ami-202*"]
+#   }
+# }
 
 # Risparmia fino al 90% sui costi di EC2 utilizzando istanze Spot e fino al 72% con AWS Savings Plans. Ciò va ad aggiungersi al risparmio fino al 10% ottenuto ...
 # Le istanze Spot di Amazon EC2 ti permettono di sfruttare le capacità EC2 inutilizzate all’interno del cloud AWS. Le istanze Spot sono disponibili con uno sconto pari al 90% rispetto ai prezzi delle istanze on demand. È possibile impiegare le istanze Spot per diverse applicazioni stateless, flessibili e con tolleranza ai guasti, come ad esempio Big Data, carichi di lavoro con container, integrazione e distribuzione continua, server Web, high performance computing (HPC) e carichi di lavoro di test e sviluppo. Le istanze Spot si integrano con altri servizi AWS tra cui Auto Scaling, EMR, ECS, CloudFormation, Data Pipeline e AWS Batch, permettendoti di scegliere come lanciare e mantenere le tue applicazioni in esecuzione sulle istanze Spot.
@@ -57,18 +76,67 @@ locals {
 
 data "aws_region" "current" {}
 
+resource "aws_key_pair" "deployer" {
+  key_name   = "deployer-key"
+  public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBOWIYfTtfus0t5kDQ4uAo7/lQVu9zrXzUP09fBf/bPa kyn-aws-01"
+}
+
 ############################## Network ##############################
 
 resource "aws_vpc" "demoawx_vpc" {
   cidr_block = "172.16.32.0/22"
-  tags = local.common_tags
+  enable_dns_hostnames = true
+  tags = merge( local.common_tags, { Name = "demoawx" } )
 }
 
 resource "aws_subnet" "demoawx_subnet" {
   vpc_id            = aws_vpc.demoawx_vpc.id
   cidr_block        = "172.16.32.0/24"
   availability_zone = "${data.aws_region.current.name}a"
-  tags = local.common_tags
+  tags = merge( local.common_tags, { Name = "demoawx" } )
+}
+
+resource "aws_security_group" "demoawx" {
+  name        = "default"
+  description = "default VPC security group"
+  vpc_id      = aws_vpc.demoawx_vpc.id
+  tags = merge( local.common_tags, { Name = "default" } )
+}
+
+resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i001" {
+  security_group_id = aws_security_group.demoawx.id
+  cidr_ipv4   = "172.16.32.0/22"
+  from_port   = 22
+  ip_protocol = "tcp"
+  to_port     = 22
+  tags = merge( local.common_tags, { Name = "i001" } )
+}
+
+resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i002" {
+  security_group_id = aws_security_group.demoawx.id
+  cidr_ipv4   = "176.107.152.230/32"
+  from_port   = 22
+  ip_protocol = "tcp"
+  to_port     = 22
+  tags = merge( local.common_tags, { Name = "i002" } )
+}
+
+resource "aws_vpc_security_group_egress_rule" "sg-demoawx-e001" {
+  security_group_id = aws_security_group.demoawx.id
+  cidr_ipv4   = "0.0.0.0/0"
+  from_port   = 22
+  to_port     = 50000
+  ip_protocol = "tcp"
+  tags = merge( local.common_tags, { Name = "e001" } )
+}
+
+resource "aws_vpc_security_group_egress_rule" "sg-demoawx-e002" {
+  security_group_id = aws_security_group.demoawx.id
+  cidr_ipv4   = "0.0.0.0/0"
+  from_port   = 22
+  to_port     = 50000
+  ip_protocol = "udp"
+  tags = merge( local.common_tags, { Name = "e002" } )
 }
 
 ############################## Gitea ##############################
@@ -80,8 +148,9 @@ resource "aws_network_interface" "demoawx01" {
 }
 
 resource "aws_instance" "git01" {
-  #ami = "ami-0100bd16cd78243d8"
   ami = data.aws_ami.git01.id
+  key_name = aws_key_pair.deployer.key_name
+
   #instance_market_options {
   #  market_type = "spot"
   #  spot_options {
@@ -98,7 +167,20 @@ resource "aws_instance" "git01" {
     network_interface_id = aws_network_interface.demoawx01.id
     device_index         = 0
   }
+
+  root_block_device {
+    delete_on_termination = true
+    volume_size           = 30
+    volume_type           = "gp3"
+  }
   tags = merge( local.common_tags, { Name = "git01" } )
 }
+
+resource "aws_eip" "git01" {
+  instance = aws_instance.git01.id
+  domain   = "vpc"
+  tags = merge( local.common_tags, { Name = "git01" } )
+}
+
 
 ############################## XXX ##############################
