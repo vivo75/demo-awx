@@ -39,27 +39,6 @@ data "aws_ami" "default" {
   }
 }
 
-# # ami-0d8270d86f77e72b2
-# data "aws_ami" "git01" {
-#   most_recent = true
-#   owners      = ["071630900071"]
-#   filter {
-#     name   = "architecture"
-#     values = ["arm64"]
-#   }
-#   filter {
-#     name   = "name"
-#     values = ["al2023-ami-202*"]
-#   }
-# }
-
-# Risparmia fino al 90% sui costi di EC2 utilizzando istanze Spot e fino al 72% con AWS Savings Plans. Ciò va ad aggiungersi al risparmio fino al 10% ottenuto ...
-# Le istanze Spot di Amazon EC2 ti permettono di sfruttare le capacità EC2 inutilizzate all’interno del cloud AWS. Le istanze Spot sono disponibili con uno sconto pari al 90% rispetto ai prezzi delle istanze on demand. È possibile impiegare le istanze Spot per diverse applicazioni stateless, flessibili e con tolleranza ai guasti, come ad esempio Big Data, carichi di lavoro con container, integrazione e distribuzione continua, server Web, high performance computing (HPC) e carichi di lavoro di test e sviluppo. Le istanze Spot si integrano con altri servizi AWS tra cui Auto Scaling, EMR, ECS, CloudFormation, Data Pipeline e AWS Batch, permettendoti di scegliere come lanciare e mantenere le tue applicazioni in esecuzione sulle istanze Spot.
-# Inoltre, puoi anche combinare in modo semplice le istanze Spot con le istanze on demand, le istanze riservate e i Saving Plans così da ottimizzare il costo dei carichi di lavoro senza comprometterne le prestazioni. Grazie alla capacità di ridimensionamento offerta da AWS, le istanze Spot possono offrire la possibilità di ricalibrare le risorse e ridurre i costi per i carichi di lavoro che necessitano tali operazioni. Potrai inoltre ibernare, fermare o terminare le tue istanze Spot quando EC2 riottiene le capacità con due minuti di preavviso. Solo su AWS, hai facile accesso alle capacità di calcolo inutilizzate con una tale libertà di ridimensionamento, permettendoti di risparmiare fino al 90%.
-# https://aws.amazon.com/it/ec2/spot/
-# https://www.youtube.com/watch?v=mXX1dgmStlo&feature=youtu.be
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-best-practices.html
-
 locals {
   common_tags = {
     project       = "Demo ambiente AWX"
@@ -94,13 +73,6 @@ resource "aws_route_table" "main-demoawx" {
   tags = merge( local.common_tags, { Name = "main-demoawx" } )
   depends_on = [aws_internet_gateway.demoawx]
 }
-
-# resource "aws_route" "main-demoawx-defgw" {
-#   route_table_id            = aws_route_table.main-demoawx.id
-#   destination_cidr_block    = "0.0.0.0/0"
-#   gateway_id                = aws_internet_gateway.demoawx.id
-#   depends_on                = [aws_route_table.main-demoawx]
-# }
 
 resource "aws_security_group" "demoawx" {
   name        = "default"
@@ -185,7 +157,6 @@ resource "aws_subnet" "demoawx-eip" {
 resource "aws_route_table" "demoawx-eip" {
   vpc_id = aws_vpc.demoawx_vpc.id
   tags = merge( local.common_tags, { Name = "demoawx-eip" } )
-#   depends_on = [aws_nat_gateway.demoawx]
 }
 
 resource "aws_route" "demoawx-eip" {
@@ -217,7 +188,6 @@ resource "aws_route_table" "demoawx" {
   for_each = {for z in local.zones: z.availability_zone =>  z}
   vpc_id = aws_vpc.demoawx_vpc.id
   tags = merge( local.common_tags, { Name = "demoawx-${each.value.availability_zone}" } )
-#   depends_on = [aws_nat_gateway.demoawx]
 }
 
 resource "aws_route" "demoawx-defgw" {
@@ -241,22 +211,6 @@ resource "aws_subnet" "demoawx_subnet" {
   availability_zone = "${each.value.availability_zone}"
   tags = merge( local.common_tags, { Name = "${each.value.name}" } )
 }
-#
-# resource "aws_eip" "sbn_nat" {
-#   for_each = {for z in local.zones: z.availability_zone =>  z}
-#   domain   = "vpc"
-#   tags = merge( local.common_tags, { Name = "sbn_nat-${each.value.name}" } )
-# }
-
-# resource "aws_nat_gateway" "demoawx" {
-#   for_each = {for z in local.zones: z.availability_zone =>  z}
-#   allocation_id = aws_eip.sbn_nat["${each.value.availability_zone}"].id
-#   subnet_id     = aws_subnet.demoawx_subnet["${each.value.availability_zone}"].id
-#   private_ip    = "${each.value.nat_private_ip}"
-#   connectivity_type = "public"
-#   tags = merge( local.common_tags, { Name = "sbn_nat-${each.value.availability_zone}" } )
-#   depends_on = [aws_internet_gateway.demoawx]
-# }
 
 resource "aws_security_group" "k3s" {
   for_each = {for z in local.zones: z.availability_zone =>  z}
@@ -298,15 +252,6 @@ resource "aws_instance" "git01" {
   ami = data.aws_ami.default.id
   key_name = aws_key_pair.deployer.key_name
 
-  #instance_market_options {
-  #  market_type = "spot"
-  #  spot_options {
-  #    instance_interruption_behavior = "stop"
-  #    spot_instance_type = "persistent"
-  #  }
-  #}
-  ## aws ec2 describe-instance-type-offerings --filters Name=instance-type,Values=instance-type --region eu-south-1
-  ## https://eu-south-1.console.aws.amazon.com/ec2/home?region=eu-south-1#InstanceTypes:
   instance_type = "t4g.small" # gratuita fino al 2023-12-31 (vcpu 2, 2GB, 20%, cred.24/h, net: 5Gb, disk 2.085Mb/s) 0.0192 USD/h
   ## m6g.large   2       8       Solo EBS        Fino a 10       Fino a 4.750 0.0896 USD/h
 
@@ -361,20 +306,13 @@ resource "aws_eip" "k3s" {
   tags = merge( local.common_tags, { Name = "${each.value.instance_name}" } )
 }
 
-#
-# # resource "aws_network_interface_sg_attachment" "sg_attachment" {
-# #   for_each = {for server in local.k3sinstances: server.instance_name =>  server}
-# #   security_group_id    = aws_security_group.demoawx.id
-# #   network_interface_id = aws_network_interface.k3s["${each.key}"].id
-# # }
-#
-# resource "aws_ebs_volume" "k3s-v001" {
-#   for_each = {for server in local.k3sinstances: server.instance_name =>  server}
-#   availability_zone = "${each.value.availability_zone}"
-#   size              = 30
-#   type              = "gp3"
-#   tags = merge( local.common_tags, { Name = "${each.value.instance_volume}" } )
-# }
+resource "aws_ebs_volume" "k3s-v001" {
+  for_each = {for server in local.k3sinstances: server.instance_name =>  server}
+  availability_zone = "${each.value.availability_zone}"
+  size              = 30
+  type              = "gp3"
+  tags = merge( local.common_tags, { Name = "${each.value.instance_volume}" } )
+}
 
 resource "aws_instance" "k3s" {
   for_each = {for server in local.k3sinstances: server.instance_name =>  server}
@@ -394,39 +332,12 @@ resource "aws_instance" "k3s" {
   tags = merge( local.common_tags, { Name = "${each.value.instance_name}" } )
 }
 
-# resource "aws_volume_attachment" "k3s-v001" {
-#   for_each = {for server in local.k3sinstances: server.instance_name =>  server}
-#   device_name                     = "/dev/sdd"
-#   volume_id                       = aws_ebs_volume.k3s-v001["${each.key}"].id
-#   instance_id                     = aws_instance.k3s["${each.key}"].id
-#   stop_instance_before_detaching  = true
-# }
-
-############################## ipv6 ##############################
-
-# resource "aws_vpc_ipam" "demoawx" {
-#   operating_regions {
-#     region_name = data.aws_region.current.name
-#   }
-#   tags = merge( local.common_tags, { Name = "demoawx" } )
-# }
-#
-# resource "aws_vpc_ipam_pool" "demoawx" {
-#   address_family        = "ipv6"
-#   ipam_scope_id         = aws_vpc_ipam.demoawx.public_default_scope_id
-#   locale                = data.aws_region.current.name
-#   auto_import           = true
-#   public_ip_source      = "amazon"
-#   aws_service           = "ec2"
-#   publicly_advertisable = true
-#   tags = merge( local.common_tags, { Name = "demoawx" } )
-# }
-
-# resource "aws_vpc_ipv6_cidr_block_association" "demoawx_vpc" {
-#   ipv6_ipam_pool_id = aws_vpc_ipam_pool.demoawx.id
-#   vpc_id            = aws_vpc.demoawx_vpc.id
-# }
-# "ipv6_cidr_block" = "2a05:d01a:e66:8b00::/56"
-# "ipv6_ipam_pool_id" = ""
+resource "aws_volume_attachment" "k3s-v001" {
+  for_each = {for server in local.k3sinstances: server.instance_name =>  server}
+  device_name                     = "/dev/sdd"
+  volume_id                       = aws_ebs_volume.k3s-v001["${each.key}"].id
+  instance_id                     = aws_instance.k3s["${each.key}"].id
+  stop_instance_before_detaching  = true
+}
 
 ############################## XXX ##############################
