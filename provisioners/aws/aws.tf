@@ -2,18 +2,12 @@
 # sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
 # sudo yum -y install terraform
 
-############################## import ##############################
-
+############################## imports ##############################
 
 # import {
-#   to = aws_vpc.demoawx_vpc
-#   id = "vpc-0ae16271e4333ead2"
+#   to = aws_vpc_ipv6_cidr_block_association.demoawx_vpc
+#   id = "vpc-cidr-assoc-0a2b25ff54e0083a6"
 # }
-
-import {
-  to = aws_security_group.demoawx
-  id = "sg-054e7c92f0965eb59"
-}
 
 ############################## initialization ##############################
 
@@ -32,7 +26,7 @@ provider "aws" {
 }
 
 # ami = "ami-0100bd16cd78243d8"
-data "aws_ami" "git01" {
+data "aws_ami" "default" {
   most_recent = true
   owners      = ["136693071363"]
   filter {
@@ -84,17 +78,29 @@ resource "aws_key_pair" "deployer" {
 ############################## Network ##############################
 
 resource "aws_vpc" "demoawx_vpc" {
-  cidr_block = "172.16.32.0/22"
-  enable_dns_hostnames = true
+  cidr_block                        = "172.16.32.0/22"
+  enable_dns_hostnames              = true
+  assign_generated_ipv6_cidr_block  = true
   tags = merge( local.common_tags, { Name = "demoawx" } )
 }
 
-resource "aws_subnet" "demoawx_subnet" {
-  vpc_id            = aws_vpc.demoawx_vpc.id
-  cidr_block        = "172.16.32.0/24"
-  availability_zone = "${data.aws_region.current.name}a"
+resource "aws_internet_gateway" "demoawx" {
+  vpc_id = aws_vpc.demoawx_vpc.id
   tags = merge( local.common_tags, { Name = "demoawx" } )
 }
+
+resource "aws_route_table" "main-demoawx" {
+  vpc_id = aws_vpc.demoawx_vpc.id
+  tags = merge( local.common_tags, { Name = "main-demoawx" } )
+  depends_on = [aws_internet_gateway.demoawx]
+}
+
+# resource "aws_route" "main-demoawx-defgw" {
+#   route_table_id            = aws_route_table.main-demoawx.id
+#   destination_cidr_block    = "0.0.0.0/0"
+#   gateway_id                = aws_internet_gateway.demoawx.id
+#   depends_on                = [aws_route_table.main-demoawx]
+# }
 
 resource "aws_security_group" "demoawx" {
   name        = "default"
@@ -167,16 +173,129 @@ resource "aws_vpc_security_group_egress_rule" "sg-demoawx-e002" {
   tags = merge( local.common_tags, { Name = "e002" } )
 }
 
+############################## app network ##############################
+
+resource "aws_subnet" "demoawx-eip" {
+  vpc_id            = aws_vpc.demoawx_vpc.id
+  cidr_block        = "172.16.32.0/24"
+  availability_zone = "${data.aws_region.current.name}a"
+  tags = merge( local.common_tags, { Name = "demoawx-eip" } )
+}
+
+resource "aws_route_table" "demoawx-eip" {
+  vpc_id = aws_vpc.demoawx_vpc.id
+  tags = merge( local.common_tags, { Name = "demoawx-eip" } )
+#   depends_on = [aws_nat_gateway.demoawx]
+}
+
+resource "aws_route" "demoawx-eip" {
+  route_table_id            = aws_route_table.demoawx-eip.id
+  destination_cidr_block    = "0.0.0.0/0"
+  gateway_id                = aws_internet_gateway.demoawx.id
+  depends_on                = [aws_route_table.demoawx-eip]
+}
+
+resource "aws_route_table_association" "demoawx-eip" {
+  subnet_id      = aws_subnet.demoawx-eip.id
+  route_table_id = aws_route_table.demoawx-eip.id
+}
+
+############################## K3S networking ##############################
+
+locals {
+  zones = [
+    for i in range(0, 1) : {
+      availability_zone = "${data.aws_region.current.name}${substr("abcabcabcabcabc", i, 1)}"
+      cidr_block        = "172.16.${32 + i + 1}.0/24"
+      nat_private_ip    = "172.16.${32 + i + 1}.253"
+      name              = "demoawx-${i}"
+    }
+  ]
+}
+
+resource "aws_route_table" "demoawx" {
+  for_each = {for z in local.zones: z.availability_zone =>  z}
+  vpc_id = aws_vpc.demoawx_vpc.id
+  tags = merge( local.common_tags, { Name = "demoawx-${each.value.availability_zone}" } )
+#   depends_on = [aws_nat_gateway.demoawx]
+}
+
+resource "aws_route" "demoawx-defgw" {
+  for_each = {for z in local.zones: z.availability_zone =>  z}
+  route_table_id            = aws_route_table.demoawx["${each.value.availability_zone}"].id
+  destination_cidr_block    = "0.0.0.0/0"
+#   nat_gateway_id            = aws_nat_gateway.demoawx["${each.value.availability_zone}"].id
+  gateway_id                = aws_internet_gateway.demoawx.id
+}
+
+resource "aws_route_table_association" "demoawx-defgw" {
+  for_each = {for z in local.zones: z.availability_zone =>  z}
+  subnet_id      = aws_subnet.demoawx_subnet["${each.value.availability_zone}"].id
+  route_table_id = aws_route_table.demoawx["${each.value.availability_zone}"].id
+}
+
+resource "aws_subnet" "demoawx_subnet" {
+  for_each = {for z in local.zones: z.availability_zone =>  z}
+  vpc_id            = aws_vpc.demoawx_vpc.id
+  cidr_block        = "${each.value.cidr_block}"
+  availability_zone = "${each.value.availability_zone}"
+  tags = merge( local.common_tags, { Name = "${each.value.name}" } )
+}
+#
+# resource "aws_eip" "sbn_nat" {
+#   for_each = {for z in local.zones: z.availability_zone =>  z}
+#   domain   = "vpc"
+#   tags = merge( local.common_tags, { Name = "sbn_nat-${each.value.name}" } )
+# }
+
+# resource "aws_nat_gateway" "demoawx" {
+#   for_each = {for z in local.zones: z.availability_zone =>  z}
+#   allocation_id = aws_eip.sbn_nat["${each.value.availability_zone}"].id
+#   subnet_id     = aws_subnet.demoawx_subnet["${each.value.availability_zone}"].id
+#   private_ip    = "${each.value.nat_private_ip}"
+#   connectivity_type = "public"
+#   tags = merge( local.common_tags, { Name = "sbn_nat-${each.value.availability_zone}" } )
+#   depends_on = [aws_internet_gateway.demoawx]
+# }
+
+resource "aws_security_group" "k3s" {
+  for_each = {for z in local.zones: z.availability_zone =>  z}
+  name        = "k3s-${each.value.availability_zone}"
+  description = "k3s security group"
+  vpc_id      = aws_vpc.demoawx_vpc.id
+  tags = merge( local.common_tags, { Name = "k3s-${each.value.availability_zone}" } )
+}
+
+resource "aws_vpc_security_group_egress_rule" "sg-k3s-e001" {
+  for_each = {for z in local.zones: z.availability_zone =>  z}
+  security_group_id = aws_security_group.k3s["${each.key}"].id
+  cidr_ipv4   = "0.0.0.0/0"
+  from_port   = 22
+  to_port     = 50000
+  ip_protocol = "tcp"
+  tags = merge( local.common_tags, { Name = "e001-${each.value.availability_zone}" } )
+}
+
+resource "aws_vpc_security_group_egress_rule" "sg-k3s-e002" {
+  for_each = {for z in local.zones: z.availability_zone =>  z}
+  security_group_id = aws_security_group.k3s["${each.key}"].id
+  cidr_ipv4   = "0.0.0.0/0"
+  from_port   = 22
+  to_port     = 50000
+  ip_protocol = "udp"
+  tags = merge( local.common_tags, { Name = "e002-${each.value.availability_zone}" } )
+}
+
 ############################## Gitea ##############################
 
 resource "aws_network_interface" "demoawx01" {
-  subnet_id   = aws_subnet.demoawx_subnet.id
+  subnet_id   = aws_subnet.demoawx-eip.id
   private_ips = ["172.16.32.5"]
   tags = local.common_tags
 }
 
 resource "aws_instance" "git01" {
-  ami = data.aws_ami.git01.id
+  ami = data.aws_ami.default.id
   key_name = aws_key_pair.deployer.key_name
 
   #instance_market_options {
@@ -210,5 +329,104 @@ resource "aws_eip" "git01" {
   tags = merge( local.common_tags, { Name = "git01" } )
 }
 
+############################## K3S ##############################
+
+locals {
+  k3sconfig = [
+    for i in range(0, 1) : {
+      instance_name = "k3s0${i + 1}"
+      instance_volume = "k3s0${i + 1}v001"
+      #private_ip = cidrhost("172.16.32.0/24", "${6 + i}")
+      private_ip = "172.16.${32 + i + 1}.6"
+      availability_zone = "${data.aws_region.current.name}${substr("abcabcabcabcabc", i, 1)}"
+    }
+  ]
+}
+
+locals {
+  k3sinstances = flatten(local.k3sconfig)
+}
+
+resource "aws_network_interface" "k3s" {
+  for_each = {for server in local.k3sinstances: server.instance_name =>  server}
+  subnet_id   = aws_subnet.demoawx_subnet["${each.value.availability_zone}"].id
+  private_ips = ["${each.value.private_ip}"]
+  tags = merge( local.common_tags, { Name = "${each.value.instance_name}" } )
+}
+
+resource "aws_eip" "k3s" {
+  for_each = {for server in local.k3sinstances: server.instance_name =>  server}
+  instance = aws_instance.k3s["${each.value.instance_name}"].id
+  domain   = "vpc"
+  tags = merge( local.common_tags, { Name = "${each.value.instance_name}" } )
+}
+
+#
+# # resource "aws_network_interface_sg_attachment" "sg_attachment" {
+# #   for_each = {for server in local.k3sinstances: server.instance_name =>  server}
+# #   security_group_id    = aws_security_group.demoawx.id
+# #   network_interface_id = aws_network_interface.k3s["${each.key}"].id
+# # }
+#
+# resource "aws_ebs_volume" "k3s-v001" {
+#   for_each = {for server in local.k3sinstances: server.instance_name =>  server}
+#   availability_zone = "${each.value.availability_zone}"
+#   size              = 30
+#   type              = "gp3"
+#   tags = merge( local.common_tags, { Name = "${each.value.instance_volume}" } )
+# }
+
+resource "aws_instance" "k3s" {
+  for_each = {for server in local.k3sinstances: server.instance_name =>  server}
+  ami                     = data.aws_ami.default.id
+  availability_zone       = "${each.value.availability_zone}"
+  key_name                = aws_key_pair.deployer.key_name
+  instance_type           = "t4g.small"
+  network_interface {
+    network_interface_id  = aws_network_interface.k3s["${each.key}"].id
+    device_index          = 0
+  }
+  root_block_device {
+    delete_on_termination = true
+    volume_size           = 8
+    volume_type           = "gp3"
+  }
+  tags = merge( local.common_tags, { Name = "${each.value.instance_name}" } )
+}
+
+# resource "aws_volume_attachment" "k3s-v001" {
+#   for_each = {for server in local.k3sinstances: server.instance_name =>  server}
+#   device_name                     = "/dev/sdd"
+#   volume_id                       = aws_ebs_volume.k3s-v001["${each.key}"].id
+#   instance_id                     = aws_instance.k3s["${each.key}"].id
+#   stop_instance_before_detaching  = true
+# }
+
+############################## ipv6 ##############################
+
+# resource "aws_vpc_ipam" "demoawx" {
+#   operating_regions {
+#     region_name = data.aws_region.current.name
+#   }
+#   tags = merge( local.common_tags, { Name = "demoawx" } )
+# }
+#
+# resource "aws_vpc_ipam_pool" "demoawx" {
+#   address_family        = "ipv6"
+#   ipam_scope_id         = aws_vpc_ipam.demoawx.public_default_scope_id
+#   locale                = data.aws_region.current.name
+#   auto_import           = true
+#   public_ip_source      = "amazon"
+#   aws_service           = "ec2"
+#   publicly_advertisable = true
+#   tags = merge( local.common_tags, { Name = "demoawx" } )
+# }
+
+# resource "aws_vpc_ipv6_cidr_block_association" "demoawx_vpc" {
+#   ipv6_ipam_pool_id = aws_vpc_ipam_pool.demoawx.id
+#   vpc_id            = aws_vpc.demoawx_vpc.id
+# }
+# "ipv6_cidr_block" = "2a05:d01a:e66:8b00::/56"
+# "ipv6_ipam_pool_id" = ""
 
 ############################## XXX ##############################
