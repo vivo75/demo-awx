@@ -1,0 +1,348 @@
+---
+# ansible-playbook -v -i inventory.yml install-k3s.yml
+# https://www.suse.com/c/rancher_blog/deploying_ha_k3s_external_database/
+# https://github.com/k3s-io/k3s-ansible
+# TODO: kubectl label node ip-172-16-33-6 awslab.kyndryl.com/availability_zone=eu-south-1a
+
+- hosts: k3s_cluster
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    ########################### Prerequisiti
+
+    - name: Set SELinux to disabled state
+      selinux:
+        state: disabled
+      when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+
+    - name: Enable IPv4 forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: "1"
+        state: present
+        reload: yes
+
+    - name: Enable IPv6 forwarding
+      sysctl:
+        name: net.ipv6.conf.all.forwarding
+        value: "1"
+        state: present
+        reload: yes
+      when: ansible_all_ipv6_addresses
+
+    - name: Add br_netfilter to /etc/modules-load.d/
+      copy:
+        content: "br_netfilter"
+        dest: /etc/modules-load.d/br_netfilter.conf
+        mode: "u=rw,g=,o="
+
+    - name: Load br_netfilter
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Set bridge-nf-call-iptables (just to be sure)
+      sysctl:
+        name: "{{ item }}"
+        value: "1"
+        state: present
+        reload: yes
+      loop:
+        - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-ip6tables
+
+    - name: Add /usr/local/bin to sudo secure_path
+      lineinfile:
+        line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+        regexp: "Defaults(\\s)*secure_path(\\s)*="
+        state: present
+        insertafter: EOF
+        path: /etc/sudoers
+        validate: 'visudo -cf %s'
+      when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+
+      ########################### ZFS
+
+    #TODO: read debian version from facts
+    - name: Add backports repository
+      ansible.builtin.apt_repository:
+        repo: deb http://deb.debian.org/debian bookworm-backports main contrib non-free
+        state: present
+
+    - name: Add packages
+      ansible.builtin.apt:
+        default_release: bookworm-backports
+        update_cache: yes
+        fail_on_autoremove: no
+        cache_valid_time: 1
+
+    #TODO: deve essere dipendente dall'architettura + controlla che inserisca gli header giusti
+    - name: Add kernel packages
+      ansible.builtin.apt:
+        pkg:
+        - linux-headers-arm64
+        #- linux-headers-6.1.0-13-cloud-arm64
+        install_recommends: yes
+
+    # - name: Unconditionally reboot the machine with all defaults
+    #   ansible.builtin.reboot:
+    #     post_reboot_delay: 60
+
+    - name: Purge old kernels
+      apt:
+        autoremove: yes
+        purge: yes
+
+    - name: Add zfs packages
+      ansible.builtin.apt:
+        pkg:
+        - zfs-dkms
+        - zfsutils-linux
+        default_release: bookworm-backports
+
+    - name: Add zfs to /etc/modules-load.d/
+      copy:
+        content: "zfs"
+        dest: /etc/modules-load.d/zfs.conf
+        mode: "u=rw,g=,o="
+
+    - name: Load zfs
+      modprobe:
+        name: zfs
+        state: present
+
+    ########################### Download
+
+    - name: Download k3s binary x64
+      get_url:
+        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s
+        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-amd64.txt
+        dest: /usr/local/bin/k3s
+        owner: root
+        group: root
+        mode: 0755
+      when: ansible_facts.architecture == "x86_64"
+
+    - name: Download k3s binary arm64
+      get_url:
+        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
+        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
+        dest: /usr/local/bin/k3s
+        owner: root
+        group: root
+        mode: 0755
+      when:
+        - ( ansible_facts.architecture is search("arm") and
+            ansible_facts.userspace_bits == "64" ) or
+          ansible_facts.architecture is search("aarch64")
+
+    - name: Download k3s binary armhf
+      get_url:
+        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-armhf
+        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm.txt
+        dest: /usr/local/bin/k3s
+        owner: root
+        group: root
+        mode: 0755
+      when:
+        - ansible_facts.architecture is search("arm")
+        - ansible_facts.userspace_bits == "32"
+
+
+########################### install K3S : ZFS
+- hosts: k3s_cluster
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    #TODO: remove ignore_errors and replace with conditional creation
+    - name: create ZFS pool
+      command: >-
+        zpool create
+        {{ '-o' if zfs_pool_options else '' }} {{ zfs_pool_options | join(' -o ') }}
+        {{ '-O' if zfs_pool_Options else '' }} {{ zfs_pool_Options | join(' -O ') }}
+        {{ '-m ' + zfs_pool_mountpoint if zfs_pool_mountpoint else '-m none' }}
+        {{ zfs_pool_name }}
+        {{ zfs_pool_mode if zfs_pool_mode else '' }}
+        {{ zfs_pool_devices | join(' ') }}
+      when:
+        - zfs_pool_state | default('present') == 'present'
+      ignore_errors: true
+
+    # - name: destroy ZFS pool
+    #   command: zpool destroy {{ zfs_pool_name }}
+    #   when:
+    #     - zfs_pool_state | default('present') == 'absent'
+
+    - name: Gather facts about ZFS pool Data
+      community.general.zpool_facts: pool=data
+
+    - name: Print gathered information
+      ansible.builtin.debug:
+        msg: 'ZFS pool {{ item.name }} has {{ item.free }} free space out of {{ item.size }}.'
+      with_items: '{{ ansible_zfs_pools }}'
+
+    - name: Create a new file system root for k3s
+      community.general.zfs:
+        name: data/k3s
+        state: present
+        extra_zfs_properties:
+          mountpoint: 'none'
+
+    - name: Create a new file system root for k3s
+      community.general.zfs:
+        name: data/k3s/containerd
+        state: present
+        extra_zfs_properties:
+          mountpoint: /var/lib/containerd/io.containerd.snapshotter.v1.zfs data/k3s/containerd
+
+    - name: Create a new file system root for k3s
+      community.general.zfs:
+        name: data/k3s/containerd-overlayfs
+        state: present
+        extra_zfs_properties:
+          mountpoint: /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs
+
+    - name: Create a new file system root for k3s
+      community.general.zfs:
+        name: data/srv/local-storage
+        state: present
+        extra_zfs_properties:
+          mountpoint: /srv/local-storage
+
+############################### install K3S : Application
+- hosts: master
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: Create directory k3s_server_location
+      file:
+        path: "{{ k3s_server_location }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: "u=rwx,g=rwx,o=rx"
+
+    - name: Copy K3s service file
+      register: k3s_service
+      template:
+        src: "k3s.service.j2"
+        dest: "{{ systemd_dir }}/k3s.service"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Enable and check K3s service
+      systemd:
+        name: k3s
+        daemon_reload: yes
+        state: restarted
+        enabled: yes
+
+    - name: Wait for node-token
+      wait_for:
+        path: "{{ k3s_server_location }}/server/node-token"
+
+    - name: Register node-token file access mode
+      stat:
+        path: "{{ k3s_server_location }}/server/node-token"
+      register: p
+
+    - name: Change file access node-token
+      file:
+        path: "{{ k3s_server_location }}/server/node-token"
+        mode: "g+rx,o+rx"
+
+    - name: Read node-token from master
+      slurp:
+        path: "{{ k3s_server_location }}/server/node-token"
+      register: node_token
+
+    - name: Store Master node-token
+      set_fact:
+        token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+
+    - name: Restore node-token file access
+      file:
+        path: "{{ k3s_server_location }}/server/node-token"
+        mode: "{{ p.stat.mode }}"
+
+    - name: Create directory .kube
+      file:
+        path: ~{{ ansible_user }}/.kube
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: "u=rwx,g=rx,o="
+
+    - name: Copy config file to user home directory
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: ~{{ ansible_user }}/.kube/config
+        remote_src: yes
+        owner: "{{ ansible_user }}"
+        mode: "u=rw,g=,o="
+
+    - name: Replace https://localhost:6443 by https://master-ip:6443
+      command: >-
+        k3s kubectl config set-cluster default
+          --server=https://{{ ansible_hostname }}:6443
+          --kubeconfig ~{{ ansible_user }}/.kube/config
+      changed_when: true
+
+    - name: Create kubectl symlink
+      file:
+        src: /usr/local/bin/k3s
+        dest: /usr/local/bin/kubectl
+        state: link
+
+    - name: Create crictl symlink
+      file:
+        src: /usr/local/bin/k3s
+        dest: /usr/local/bin/crictl
+        state: link
+
+############################### install K3S : Nodes
+- hosts: node
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: Create directory k3s_server_location
+      file:
+        path: "{{ k3s_server_location }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: "u=rwx,g=rwx,o=rx"
+
+    - name: Copy K3s service file
+      register: k3s_service
+      template:
+        src: "k3s-node.service.j2"
+        dest: "{{ systemd_dir }}/k3s-node.service"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Enable and check K3s service
+      systemd:
+        name: k3s-node
+        daemon_reload: yes
+        state: restarted
+        enabled: yes

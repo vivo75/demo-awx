@@ -117,7 +117,6 @@ resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i004" {
   tags = merge( local.common_tags, { Name = "i004" } )
 }
 
-
 resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i005" {
   security_group_id = aws_security_group.demoawx.id
   cidr_ipv4   = "0.0.0.0/0"
@@ -125,6 +124,15 @@ resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i005" {
   ip_protocol = "tcp"
   to_port     = 22010
   tags = merge( local.common_tags, { Name = "i005" } )
+}
+
+resource "aws_vpc_security_group_ingress_rule" "sg-demoawx-i006" {
+  security_group_id = aws_security_group.demoawx.id
+  cidr_ipv4   = "176.107.152.230/32"
+  from_port   = 6443
+  ip_protocol = "tcp"
+  to_port     = 6443
+  tags = merge( local.common_tags, { Name = "i006" } )
 }
 
 resource "aws_vpc_security_group_egress_rule" "sg-demoawx-e001" {
@@ -175,7 +183,7 @@ resource "aws_route_table_association" "demoawx-eip" {
 
 locals {
   zones = [
-    for i in range(0, 1) : {
+    for i in range(0, 3) : {
       availability_zone = "${data.aws_region.current.name}${substr("abcabcabcabcabc", i, 1)}"
       cidr_block        = "172.16.${32 + i + 1}.0/24"
       nat_private_ip    = "172.16.${32 + i + 1}.253"
@@ -278,7 +286,7 @@ resource "aws_eip" "git01" {
 
 locals {
   k3sconfig = [
-    for i in range(0, 1) : {
+    for i in range(0, 3) : {
       instance_name = "k3s0${i + 1}"
       instance_volume = "k3s0${i + 1}v001"
       #private_ip = cidrhost("172.16.32.0/24", "${6 + i}")

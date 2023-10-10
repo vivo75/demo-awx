@@ -1,13 +1,24 @@
 ---
 
+systemd_dir: /etc/systemd/system
+
 ############## postgres ##############
+
+# Global configuration options that will be set in postgresql.conf.
+postgresql_global_config_options:
+  - option: unix_socket_directories
+    value: '{{ postgresql_unix_socket_directories | join(",") }}'
+  - option: log_directory
+    value: 'log'
+  - option: listen_addresses
+    value: '''*'''
 
 postgresql_hba_entries:
   - { type: local, database: all, user: postgres, auth_method: peer }
   - { type: local, database: all, user: all, auth_method: peer }
   - { type: host, database: all, user: all, address: '127.0.0.1/8', auth_method: md5 }
   - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
-  - { type: host, database: all, user: all, address: '172.16.32.0/24', auth_method: md5 }
+  - { type: host, database: all, user: all, address: '172.16.32.0/22', auth_method: md5 }
 
 postgresql_databases:
   - name: gitea
@@ -85,3 +96,33 @@ nginx_behind_haproxy_settings: false
 #         #         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 #         #         proxy_set_header X-Forwarded-Proto $scheme;
         # }
+
+############## k3s ##############
+
+master_ip: "172.16.33.6"
+k3s_version: "v1.28.2+k3s1"
+k3s_server_location: /srv/local-storage
+extra_server_args: '--datastore-endpoint="postgres://k3s_u:ThisIsTemporary@172.16.32.5:5432/k3s" --token=ThisIsTemporary'
+
+zfs_pool_name: data
+zfs_pool_mountpoint:
+zfs_pool_mode:
+zfs_pool_devices:
+  - /dev/sdd
+zfs_pool_state: present
+zfs_pool_options:
+  - "ashift=12"
+zfs_pool_Options:
+  - "acltype=posixacl"
+  - "atime=off"
+  - "canmount=off"
+  - "checksum=fletcher4"
+  - "compression=zstd-fast"
+  - "dedup=off"
+  - "dnodesize=auto"
+  - "mountpoint=none"
+  - "normalization=formD"
+  - "overlay=on"
+  - "relatime=on"
+  - "xattr=sa"
+

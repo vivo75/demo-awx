@@ -112,7 +112,6 @@
                 }
               }
 
-
             dest: '/etc/nginx/sites-available/git01.f1r.eu'
             owner: root
             group: root
@@ -124,6 +123,38 @@
             src: '/etc/nginx/sites-available/git01.f1r.eu'
             dest: '/etc/nginx/sites-enabled/git01.f1r.eu'
             state: link
+          notify: Reload nginx
+
+        - name: Ensure we can use streams
+          ansible.builtin.lineinfile:
+            path: /etc/nginx/nginx.conf
+            insertbefore: '^worker_processes'
+            line: load_module /usr/lib/nginx/modules/ngx_stream_module.so;
+
+        # TODO: create an include dir for streams
+        - name: add Streams
+          blockinfile:
+            state: present
+            insertafter: EOF
+            dest: /etc/nginx/nginx.conf
+            marker: "### add services ANSIBLE MANAGED BLOCK ###"
+            block: |2
+
+              stream {
+                  log_format logs '$remote_addr - - [$time_local] $protocol $status $bytes_sent $bytes_received $session_time "$upstream_addr"';
+
+                  access_log /var/log/nginx/access.log logs;
+
+                  upstream K3s_api_server {
+                      least_conn;
+                      server 172.16.33.6:6443 max_fails=3 fail_timeout=2s;
+                      server 172.16.34.6:6443 max_fails=3 fail_timeout=2s;
+                  }
+                  server {
+                      listen 6443;
+                      proxy_pass K3s_api_server;
+                  }
+              }
           notify: Reload nginx
 
       when: ansible_distribution_file_variety == "Debian"
