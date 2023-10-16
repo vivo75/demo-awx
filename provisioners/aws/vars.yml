@@ -126,3 +126,7 @@ zfs_pool_Options:
   - "relatime=on"
   - "xattr=sa"
 
+############## AWX operator ##############
+
+awx_operator_version: "2.6.0"
+argocd_operator_version: "v0.7.0"

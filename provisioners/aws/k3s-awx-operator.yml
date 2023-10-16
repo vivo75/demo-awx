@@ -1,0 +1,63 @@
+---
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file k3s-awx-operator.yml
+# https://github.com/ansible/awx-operator/blob/devel/docs/installation/basic-install.md
+
+- hosts: master[0]
+  gather_facts: yes
+  become: yes
+  vars_files:
+    - vars.yml
+  tasks:
+
+    - name: Add packages
+      ansible.builtin.apt:
+        pkg:
+        - git
+
+    - name: Clone the operator
+      ansible.builtin.git:
+        repo: https://github.com/ansible/awx-operator.git
+        dest: /srv/awx-operator
+        single_branch: yes
+        version: "{{ awx_operator_version }}"
+        depth: 1
+        accept_newhostkey: true
+        clone: true
+        force: true
+
+    - copy:
+        content: |2
+          ---
+          apiVersion: awx.ansible.com/v1beta1
+          kind: AWX
+          metadata:
+            name: awx-demo
+          spec:
+            service_type: clusterip
+            ingress_type: Route
+        dest: /srv/awx-operator/awx-demo.yaml
+
+    - copy:
+        content: |2
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          resources:
+            # Find the latest tag here: https://github.com/ansible/awx-operator/releases
+            - github.com/ansible/awx-operator/config/default?ref={{ awx_operator_version }}
+            - awx-demo.yaml
+
+          # Set the image tags to match the git version from above
+          images:
+            - name: quay.io/ansible/awx-operator
+              newTag: "{{ awx_operator_version }}"
+
+          # Specify a custom namespace in which to install AWX
+          namespace: awx
+
+        dest: /srv/awx-operator/kustomization.yaml
+
+    - command: make deploy
+      args:
+        chdir: /srv/awx-operator
+
+    - command: kubectl apply -k /srv/awx-operator
