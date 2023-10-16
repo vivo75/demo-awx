@@ -1,5 +1,5 @@
 ---
-# ansible-playbook -v -i inventory.yml install-gitea.yml
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file install-gitea.yml
 
 - hosts: gitea
   gather_facts: no

@@ -1,5 +1,5 @@
 ---
-# ansible-playbook -v -i inventory.yml install-db.yml
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file install-db.yml
 
 - hosts: db
   gather_facts: no

@@ -1,5 +1,5 @@
 ---
-# ansible-playbook -v -i inventory.yml install-nginx.yml
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file install-nginx.yml
 
 - hosts: nginx
   gather_facts: no
