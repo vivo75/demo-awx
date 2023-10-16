@@ -1,0 +1,95 @@
+---
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file install-k3s.yml
+# https://www.suse.com/c/rancher_blog/deploying_ha_k3s_external_database/
+# https://github.com/k3s-io/k3s-ansible
+# TODO: kubectl label node ip-172-16-33-6 awslab.kyndryl.com/availability_zone=eu-south-1a
+
+- hosts: k3s_cluster
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+      ########################### ZFS
+
+    #TODO: read debian version from facts
+    - name: Add backports repository
+      ansible.builtin.apt_repository:
+        repo: deb http://deb.debian.org/debian bookworm-backports main contrib non-free
+        state: present
+
+    - name: Add packages
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        update_cache: yes
+        fail_on_autoremove: no
+        cache_valid_time: 1
+
+    - name: Unconditionally reboot the machine with all defaults
+      ansible.builtin.reboot:
+        post_reboot_delay: 60
+
+    - name: Return kernel version to registered var
+      ansible.builtin.command: uname -r
+      register: kv
+
+    #TODO: deve essere dipendente dall'architettura + controlla che inserisca gli header giusti
+    - name: Add kernel packages
+      ansible.builtin.apt:
+        pkg:
+        - "linux-headers-{{ kv.stdout }}"
+        install_recommends: yes
+
+    - name: Purge old kernels
+      apt:
+        autoremove: yes
+        purge: yes
+
+    - name: Add zfs packages
+      ansible.builtin.apt:
+        pkg:
+        - zfs-dkms
+        - zfsutils-linux
+        default_release: bookworm-backports
+
+    - name: Add zfs to /etc/modules-load.d/
+      copy:
+        content: "zfs"
+        dest: /etc/modules-load.d/zfs.conf
+        mode: "u=rw,g=,o="
+
+    - name: Load zfs
+      modprobe:
+        name: zfs
+        state: present
+
+    #TODO: remove ignore_errors and replace with conditional creation
+    - name: create ZFS pool
+      command: >-
+        zpool create
+        {{ '-o' if zfs_pool_options else '' }} {{ zfs_pool_options | join(' -o ') }}
+        {{ '-O' if zfs_pool_Options else '' }} {{ zfs_pool_Options | join(' -O ') }}
+        {{ '-m ' + zfs_pool_mountpoint if zfs_pool_mountpoint else '-m none' }}
+        {{ zfs_pool_name }}
+        {{ zfs_pool_mode if zfs_pool_mode else '' }}
+        {{ zfs_pool_devices | join(' ') }}
+      when:
+        - zfs_pool_state | default('present') == 'present'
+      ignore_errors: true
+
+    # - name: destroy ZFS pool
+    #   command: zpool destroy {{ zfs_pool_name }}
+    #   when:
+    #     - zfs_pool_state | default('present') == 'absent'
+
+    - name: Gather facts about ZFS pool Data
+      community.general.zpool_facts: pool=data
+
+    - name: Print gathered information
+      ansible.builtin.debug:
+        msg: 'ZFS pool {{ item.name }} has {{ item.free }} free space out of {{ item.size }}.'
+      with_items: '{{ ansible_zfs_pools }}'
