@@ -1,9 +1,7 @@
 ---
-# ansible-playbook -v -i inventory.yml pippo.yml
-# https://www.suse.com/c/rancher_blog/deploying_ha_k3s_external_database/
-# https://github.com/k3s-io/k3s-ansible
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file k3s-helm.yml
 
-- hosts: k3s01.f1r.eu
+- hosts: master[0]
   gather_facts: yes
   become: yes
   vars_files:
@@ -17,7 +15,7 @@
     #TODO: read arch from facts
     - name: Add helm repository
       ansible.builtin.apt_repository:
-        repo: deb [arch=arm64] https://baltocdn.com/helm/stable/debian/ all main
+        repo: deb [arch=amd64] https://baltocdn.com/helm/stable/debian/ all main
         state: present
 
     - name: Add helm packages
@@ -39,7 +37,7 @@
     - name: Add prometheus repo
       kubernetes.core.helm_repository:
         kubeconfig: /etc/rancher/k3s/k3s.yaml
-        name: prometheus
+        name: prometheus-community
         repo_url: https://prometheus-community.github.io/helm-charts
 
     - name: Add minio repo

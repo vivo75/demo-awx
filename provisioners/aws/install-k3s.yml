@@ -1,5 +1,5 @@
 ---
-# ansible-playbook -v -i inventory.yml install-k3s.yml
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file install-k3s.yml
 # https://www.suse.com/c/rancher_blog/deploying_ha_k3s_external_database/
 # https://github.com/k3s-io/k3s-ansible
 # TODO: kubectl label node ip-172-16-33-6 awslab.kyndryl.com/availability_zone=eu-south-1a
@@ -66,56 +66,6 @@
         validate: 'visudo -cf %s'
       when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
 
-      ########################### ZFS
-
-    #TODO: read debian version from facts
-    - name: Add backports repository
-      ansible.builtin.apt_repository:
-        repo: deb http://deb.debian.org/debian bookworm-backports main contrib non-free
-        state: present
-
-    - name: Add packages
-      ansible.builtin.apt:
-        default_release: bookworm-backports
-        update_cache: yes
-        fail_on_autoremove: no
-        cache_valid_time: 1
-
-    #TODO: deve essere dipendente dall'architettura + controlla che inserisca gli header giusti
-    - name: Add kernel packages
-      ansible.builtin.apt:
-        pkg:
-        - linux-headers-arm64
-        #- linux-headers-6.1.0-13-cloud-arm64
-        install_recommends: yes
-
-    # - name: Unconditionally reboot the machine with all defaults
-    #   ansible.builtin.reboot:
-    #     post_reboot_delay: 60
-
-    - name: Purge old kernels
-      apt:
-        autoremove: yes
-        purge: yes
-
-    - name: Add zfs packages
-      ansible.builtin.apt:
-        pkg:
-        - zfs-dkms
-        - zfsutils-linux
-        default_release: bookworm-backports
-
-    - name: Add zfs to /etc/modules-load.d/
-      copy:
-        content: "zfs"
-        dest: /etc/modules-load.d/zfs.conf
-        mode: "u=rw,g=,o="
-
-    - name: Load zfs
-      modprobe:
-        name: zfs
-        state: present
-
     ########################### Download
 
     - name: Download k3s binary x64
@@ -128,10 +78,10 @@
         mode: 0755
       when: ansible_facts.architecture == "x86_64"
 
-    - name: Download k3s binary arm64
+    - name: Download k3s binary amd64
       get_url:
-        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
-        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
+        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-amd64
+        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-amd64txt
         dest: /usr/local/bin/k3s
         owner: root
         group: root
@@ -163,33 +113,6 @@
     - vars.yml
 
   tasks:
-
-    #TODO: remove ignore_errors and replace with conditional creation
-    - name: create ZFS pool
-      command: >-
-        zpool create
-        {{ '-o' if zfs_pool_options else '' }} {{ zfs_pool_options | join(' -o ') }}
-        {{ '-O' if zfs_pool_Options else '' }} {{ zfs_pool_Options | join(' -O ') }}
-        {{ '-m ' + zfs_pool_mountpoint if zfs_pool_mountpoint else '-m none' }}
-        {{ zfs_pool_name }}
-        {{ zfs_pool_mode if zfs_pool_mode else '' }}
-        {{ zfs_pool_devices | join(' ') }}
-      when:
-        - zfs_pool_state | default('present') == 'present'
-      ignore_errors: true
-
-    # - name: destroy ZFS pool
-    #   command: zpool destroy {{ zfs_pool_name }}
-    #   when:
-    #     - zfs_pool_state | default('present') == 'absent'
-
-    - name: Gather facts about ZFS pool Data
-      community.general.zpool_facts: pool=data
-
-    - name: Print gathered information
-      ansible.builtin.debug:
-        msg: 'ZFS pool {{ item.name }} has {{ item.free }} free space out of {{ item.size }}.'
-      with_items: '{{ ansible_zfs_pools }}'
 
     - name: Create a new file system root for k3s
       community.general.zfs:

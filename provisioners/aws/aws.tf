@@ -29,6 +29,19 @@ provider "aws" {
 data "aws_ami" "default" {
   most_recent = true
   owners      = ["136693071363"]
+#   filter {
+#     name   = "architecture"
+#     values = ["amd64"]
+#   }
+  filter {
+    name   = "name"
+    values = ["debian-12-amd64-*"]
+  }
+}
+
+data "aws_ami" "default-arm64" {
+  most_recent = true
+  owners      = ["136693071363"]
   filter {
     name   = "architecture"
     values = ["arm64"]
@@ -257,7 +270,7 @@ resource "aws_network_interface" "demoawx01" {
 }
 
 resource "aws_instance" "git01" {
-  ami = data.aws_ami.default.id
+  ami = data.aws_ami.default-arm64.id
   key_name = aws_key_pair.deployer.key_name
 
   instance_type = "t4g.small" # gratuita fino al 2023-12-31 (vcpu 2, 2GB, 20%, cred.24/h, net: 5Gb, disk 2.085Mb/s) 0.0192 USD/h
@@ -327,7 +340,7 @@ resource "aws_instance" "k3s" {
   ami                     = data.aws_ami.default.id
   availability_zone       = "${each.value.availability_zone}"
   key_name                = aws_key_pair.deployer.key_name
-  instance_type           = "t4g.small"
+  instance_type           = "t3a.medium"
   network_interface {
     network_interface_id  = aws_network_interface.k3s["${each.key}"].id
     device_index          = 0
