@@ -22,14 +22,14 @@ all:
         k3s02.f1r.eu:
           ansible_host: 172.16.34.6
       vars:
-        token: ThisIsTemporary
+        token: "{{ password }}"
     node:
       hosts:
         k3s03.f1r.eu:
           ansible_connection: ssh
           ansible_host: 172.16.35.6
       vars:
-        token: ThisIsTemporary
+        token: "{{ password }}"
   vars:
     ansible_connection: ssh
     ansible_user: admin

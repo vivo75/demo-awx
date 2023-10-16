@@ -29,16 +29,16 @@ postgresql_databases:
 postgresql_users:
   - name: gitea_u
     db: gitea
-    password: ThisIsTemporary
+    password: "{{ password }}"
   - name: k3s_u
     db: k3s
-    password: ThisIsTemporary
+    password: "{{ password }}"
 
 ############## gitea ##############
 
 gitea_version: 1.21
 gitea_hostname: 'git01.f1r.eu'
-gitea_db_pwd: ThisIsTemporary
+gitea_db_pwd: "{{ password }}"
 
 gitea_db_host: localhost
 gitea_db_port: 5432
@@ -102,7 +102,7 @@ nginx_behind_haproxy_settings: false
 master_ip: "172.16.33.6"
 k3s_version: "v1.28.2+k3s1"
 k3s_server_location: /srv/local-storage
-extra_server_args: '--datastore-endpoint="postgres://k3s_u:ThisIsTemporary@172.16.32.5:5432/k3s" --token=ThisIsTemporary'
+extra_server_args: '--datastore-endpoint="postgres://k3s_u:{{ password }}@172.16.32.5:5432/k3s" --token={{ password }}'
 
 zfs_pool_name: data
 zfs_pool_mountpoint:
