@@ -4,6 +4,8 @@ systemd_dir: /etc/systemd/system
 
 ############## postgres ##############
 
+# postgres_users_no_log: false
+
 # Global configuration options that will be set in postgresql.conf.
 postgresql_global_config_options:
   - option: unix_socket_directories
@@ -11,7 +13,7 @@ postgresql_global_config_options:
   - option: log_directory
     value: 'log'
   - option: listen_addresses
-    value: '''*'''
+    value: "'*'"
 
 postgresql_hba_entries:
   - { type: local, database: all, user: postgres, auth_method: peer }
@@ -25,6 +27,8 @@ postgresql_databases:
     owner: gitea_u
   - name: k3s
     owner: k3s_u
+  - name: awx
+    owner: awx_u
 
 postgresql_users:
   - name: gitea_u
@@ -32,6 +36,9 @@ postgresql_users:
     password: "{{ password }}"
   - name: k3s_u
     db: k3s
+    password: "{{ password }}"
+  - name: awx_u
+    db: awx
     password: "{{ password }}"
 
 ############## gitea ##############
