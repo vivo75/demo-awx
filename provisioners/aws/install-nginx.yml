@@ -28,21 +28,25 @@
   roles:
     - ansible-role-nginx
 
-
-
 - hosts: nginx
   gather_facts: no
   become: true
   vars_files:
     - vars.yml
   tasks:
+
+    - name: setup proxy cache
+      ansible.builtin.lineinfile:
+        path: /etc/nginx/nginx.conf
+        search_string: '<FilesMatch ".php[45]?$">'
+        insertafter: '[ \t]*error_log.*\n'
+        line: '    proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache:30m max_size=250m;'
+
     - name: Install and enable the nginx virtualhost files on Deb based systems
       block:
         - name: Install the nginx virtualhost files
           copy:
             content: |2
-              proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache:30m max_size=250m;
-
               upstream gitea
               {
                 server unix:/run/gitea/gitea.sock;
@@ -51,7 +55,7 @@
               server
               {
                 listen 80;
-                server_name git01.f1r.eu ;
+                server_name git.tshr.it ;
                 location ~ /\.(?!well-known).* {
                    deny all;
                    access_log off;
@@ -61,13 +65,13 @@
 
                 include /etc/nginx/snippets/letsencrypt-proxy.conf;
 
-                access_log /var/log/nginx/git01.f1r.eu_access.log;
+                access_log /var/log/nginx/git.tshr.it_access.log;
 
-                error_log /var/log/nginx/git01.f1r.eu_error.log;
+                error_log /var/log/nginx/git.tshr.it_error.log;
 
                 server_tokens off;
 
-                location ~ jupiter\.css
+                location ~ jupyter\.css
                 {
                   root /var/lib/gitea/custom/public/;
                 }
@@ -112,7 +116,7 @@
                 }
               }
 
-            dest: '/etc/nginx/sites-available/git01.f1r.eu'
+            dest: '/etc/nginx/sites-available/git.tshr.it'
             owner: root
             group: root
             mode: 0444
@@ -120,8 +124,8 @@
 
         - name: Enable the nginx virtualhosts
           file:
-            src: '/etc/nginx/sites-available/git01.f1r.eu'
-            dest: '/etc/nginx/sites-enabled/git01.f1r.eu'
+            src: '/etc/nginx/sites-available/git.tshr.it'
+            dest: '/etc/nginx/sites-enabled/git.tshr.it'
             state: link
           notify: Reload nginx
 
