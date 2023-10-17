@@ -1,38 +1,23 @@
 ---
-# ansible-playbook -v -i inventory.yml  -e @secrets.yml.enc --vault-password-file password_file pippo.yml
-# https://www.suse.com/c/rancher_blog/deploying_ha_k3s_external_database/
-# https://github.com/k3s-io/k3s-ansible
-# TODO: kubectl label node ip-172-16-33-6 awslab.kyndryl.com/availability_zone=eu-south-1a
+# ansible-playbook -v -i localhost, example-get-state.yml
 
-- hosts: k3s_cluster
-  gather_facts: no
-  become: no
-
-  vars_files:
-    - vars.yml
-
-  tasks:
-
-    - name: Print gathered information
-      ansible.builtin.debug:
-        msg: 'password is {{ password }} token is: {{ token }}'
-
-- hosts: localhost
+- hosts: all
   gather_facts: yes
   become: no
+  connection: local
+
   tasks:
-    # - name: Basic deploy of a service
-    #   community.general.terraform:
-    #     project_path: '/home/francesco.riosa/demo-awx/provisioners/aws'
-    #     state: present
 
     - name: Get Terraform EFS backend variables
       fetch_terraform_backend_outputs:
         object: "terraform.tfstate"
       register: tfstate
+      no_log: true # Too much output
 
     - name: Print gathered information
       ansible.builtin.debug:
         var: tfstate
 
-# "{{ terraform_storage.vars.efs_id }}"
+    - name: Print gathered information
+      ansible.builtin.debug:
+        var: tfstate.vars["aws_vpc-demoawx_vpc"]["cidr_block"]
