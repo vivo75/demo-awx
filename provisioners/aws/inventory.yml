@@ -4,32 +4,32 @@ all:
   children:
     gitea:
       hosts:
-        git01.f1r.eu:
+        git.tshr.it:
           ansible_host: 35.152.76.4
           ansible_port: 22010
           ansible_ssh_common_args:
           internal_ip: 172.16.32.5
     db:
       hosts:
-        git01.f1r.eu:
+        git.tshr.it:
     nginx:
       hosts:
-        git01.f1r.eu:
+        git.tshr.it:
     master:
       hosts:
-        k3s01.f1r.eu:
+        k3s01.tshr.it:
           ansible_host: 172.16.33.6
-        k3s02.f1r.eu:
+        k3s02.tshr.it:
           ansible_host: 172.16.34.6
       vars:
-        token: "{{ password }}"
+        token: ThisIsTemporary
     node:
       hosts:
-        k3s03.f1r.eu:
+        k3s03.tshr.it:
           ansible_connection: ssh
           ansible_host: 172.16.35.6
       vars:
-        token: "{{ password }}"
+        token: ThisIsTemporary
   vars:
     ansible_connection: ssh
     ansible_user: admin
