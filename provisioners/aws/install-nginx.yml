@@ -67,6 +67,11 @@
 
                 server_tokens off;
 
+                location ~ jupiter\.css
+                {
+                  root /var/lib/gitea/custom/public/;
+                }
+
                 root /var/lib/gitea/custom/public/;
                 index index.html;
                 error_page 500 502 503 504 /50x.html;
@@ -84,11 +89,6 @@
                   allow all;
                   log_not_found off;
                   access_log off;
-                }
-
-                location ~ jupiter\.css
-                {
-                  root /var/lib/gitea/custom/public/;
                 }
 
                 client_max_body_size 100M;
