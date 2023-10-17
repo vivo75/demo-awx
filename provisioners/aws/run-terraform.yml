@@ -1,0 +1,11 @@
+---
+# ansible-playbook -v  run-terraform.yml
+
+- hosts: localhost
+  gather_facts: no
+  become: no
+  tasks:
+    - name: Basic deploy of a service
+      community.general.terraform:
+        project_path: '/home/francesco.riosa/demo-awx/provisioners/aws'
+        state: present
