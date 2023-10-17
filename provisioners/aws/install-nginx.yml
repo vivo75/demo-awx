@@ -2,7 +2,7 @@
 # ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file install-nginx.yml
 
 - hosts: nginx
-  gather_facts: no
+  gather_facts: yes
   become: true
   vars_files:
     - vars.yml
@@ -44,89 +44,26 @@
 
     - name: Install and enable the nginx virtualhost files on Deb based systems
       block:
-        - name: Install the nginx virtualhost files
-          copy:
-            content: |2
-              upstream gitea
-              {
-                server unix:/run/gitea/gitea.sock;
-              }
-
-              server
-              {
-                listen 80;
-                server_name git.tshr.it ;
-                location ~ /\.(?!well-known).* {
-                   deny all;
-                   access_log off;
-                   log_not_found off;
-                   return 404;
-                }
-
-                include /etc/nginx/snippets/letsencrypt-proxy.conf;
-
-                access_log /var/log/nginx/git.tshr.it_access.log;
-
-                error_log /var/log/nginx/git.tshr.it_error.log;
-
-                server_tokens off;
-
-                location ~ jupyter\.css
-                {
-                  root /var/lib/gitea/custom/public/;
-                }
-
-                root /var/lib/gitea/custom/public/;
-                index index.html;
-                error_page 500 502 503 504 /50x.html;
-                location = /50x.html
-                {
-                  root /usr/share/nginx/html;
-                }
-                location = /favicon.ico
-                {
-                  log_not_found off;
-                  access_log off;
-                }
-                location = /robots.txt
-                {
-                  allow all;
-                  log_not_found off;
-                  access_log off;
-                }
-
-                client_max_body_size 100M;
-                client_body_timeout 240s;
-
-                include /etc/nginx/snippets/nginx-proxy-params.conf;
-
-                location /_/static/assets/
-                {
-                  alias /var/lib/gitea/custom/public/;
-                }
-
-                location /
-                {
-                  proxy_pass http://gitea/;
-                  client_max_body_size 512M;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                }
-              }
-
-            dest: '/etc/nginx/sites-available/git.tshr.it'
+        - name: Copy sites configuration
+          template:
+            src: "templates/nginx/{{ item }}.j2"
+            dest: "/etc/nginx/sites-available/{{ item }}"
             owner: root
             group: root
-            mode: 0444
+            mode: 0644
+          loop:
+            - git.tshr.it
+            - awx.tshr.it
           notify: Reload nginx
 
         - name: Enable the nginx virtualhosts
           file:
-            src: '/etc/nginx/sites-available/git.tshr.it'
-            dest: '/etc/nginx/sites-enabled/git.tshr.it'
+            src: '/etc/nginx/sites-available/{{ item }}'
+            dest: '/etc/nginx/sites-enabled/{{ item }}'
             state: link
+          loop:
+            - git.tshr.it
+            - awx.tshr.it
           notify: Reload nginx
 
         - name: Ensure we can use streams

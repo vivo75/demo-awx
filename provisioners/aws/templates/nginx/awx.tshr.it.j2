@@ -1,0 +1,65 @@
+upstream awx
+{
+  server 172.16.33.6:30080;
+  server 172.16.34.6:30080;
+  server 172.16.35.6:30080;
+}
+
+server
+{
+  listen 80;
+  server_name awx.tshr.it ;
+  location ~ /\.(?!well-known).* {
+      deny all;
+      access_log off;
+      log_not_found off;
+      return 404;
+  }
+
+  include /etc/nginx/snippets/letsencrypt-proxy.conf;
+
+  access_log /var/log/nginx/awx.tshr.it_access.log;
+
+  error_log /var/log/nginx/awx.tshr.it_error.log;
+
+  server_tokens off;
+
+  root /var/lib/awx/custom/public/;
+  index index.html;
+  error_page 500 502 503 504 /50x.html;
+  location = /50x.html
+  {
+    root /usr/share/nginx/html;
+  }
+  location = /favicon.ico
+  {
+    log_not_found off;
+    access_log off;
+  }
+  location = /robots.txt
+  {
+    allow all;
+    log_not_found off;
+    access_log off;
+  }
+
+  client_max_body_size 100M;
+  client_body_timeout 240s;
+
+  include /etc/nginx/snippets/nginx-proxy-params.conf;
+
+  location /_/static/assets/
+  {
+    alias /var/lib/awx/custom/public/;
+  }
+
+  location /
+  {
+    proxy_pass http://awx/;
+    client_max_body_size 512M;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
