@@ -44,8 +44,9 @@ postgresql_users:
 ############## gitea ##############
 
 gitea_version: 1.21
-gitea_hostname: 'git01.f1r.eu'
+gitea_hostname: 'git.tshr.it'
 gitea_db_pwd: "{{ password }}"
+gitea_disable_registration: true
 
 gitea_db_host: localhost
 gitea_db_port: 5432
@@ -69,10 +70,10 @@ nginx_behind_haproxy_settings: false
 # nginx_cors_acl_origin: 'http?://(localhost)'
 
 # nginx_virthosts:
-#   - virthost_name: git01.f1r.eu
+#   - virthost_name: git.tshr.it
 #     plain_http_enabled: true
 #     listen: 80
-#     server_name: git01.f1r.eu
+#     server_name: git.tshr.it
 #     server_aliases: ''
 #     index: index.html
 #     upstream_backends:
