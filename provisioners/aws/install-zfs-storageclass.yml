@@ -55,6 +55,13 @@
               - openebs.io/nodename
               - openebs.io/availability_zone
 
+    - name: Create a new file system data/zfspv-pool
+      community.general.zfs:
+        name: data/zfspv-pool
+        state: present
+        extra_zfs_properties:
+          compression: "zstd-3"
+
     - name: Copy openebs zfs storage class
       copy:
         dest: '/srv/k8s-charts/openebs-zfs-sc.yaml'
@@ -71,7 +78,7 @@
             fstype: "zfs"
             poolname: "data/zfspv-pool"
             recordsize: "128k"
-            compression: "zstd-fast"
+            compression: "zstd-3"
             dedup: "off"
           provisioner: zfs.csi.openebs.io
           ## use If ZFS pool is available on certain nodes only
