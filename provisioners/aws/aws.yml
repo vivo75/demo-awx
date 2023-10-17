@@ -1,0 +1,28 @@
+---
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file aws.yml
+
+- hosts: localhost
+  gather_facts: yes
+  become: no
+  connection: local
+
+  tasks:
+    - name: Get Terraform outputs
+      fetch_terraform_backend_outputs:
+        object: "terraform.tfstate"
+      register: tfstate
+      no_log: true # Too much output
+
+
+- import_playbook: run-terraform.yml
+- import_playbook: install-zfs.yml
+- import_playbook: install-zfs-storageclass.yml
+- import_playbook: install-db.yml
+- import_playbook: install-gitea.yml
+- import_playbook: install-nginx.yml
+- import_playbook: install-k3s.yml
+- import_playbook: k3s-helm.yml
+- import_playbook: k3s-awx-operator.yml
+# - import_playbook: k3s-argocd-operator.yml
+# - import_playbook: k3s-poweroff.yml
+

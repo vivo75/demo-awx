@@ -86,15 +86,3 @@
         release_namespace: openebs
         create_namespace: true
 
-    # Download and apply manifest for ZFS storage class
-    - name: Download metrics-server manifest to the cluster.
-      ansible.builtin.get_url:
-        url: https://openebs.github.io/charts/zfs-operator.yaml
-        dest: ~/zfs-operator.yaml
-        mode: '0664'
-
-    - name: Apply metrics-server manifest to the cluster.
-      kubernetes.core.k8s:
-        kubeconfig: /etc/rancher/k3s/k3s.yaml
-        state: present
-        src: ~/zfs-operator.yaml

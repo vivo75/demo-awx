@@ -1,0 +1,102 @@
+---
+# ansible-playbook -v -i inventory.yml  -e @secrets.yml.enc --vault-password-file password_file install-zfs-storageclass.yml
+# TODO: kubectl label node ip-172-16-33-6 awslab.kyndryl.com/availability_zone=eu-south-1a
+
+- hosts: master[0]
+  gather_facts: yes
+  become: yes
+  vars_files:
+    - vars.yml
+  tasks:
+
+    - name: create config directory
+      file:
+        path: /srv/k8s-charts/
+        state: directory
+        mode: '0775'
+
+    # Download and apply manifest for ZFS storage class
+    - name: Download metrics-server manifest to the cluster.
+      ansible.builtin.get_url:
+        url: https://openebs.github.io/charts/zfs-operator.yaml
+        dest: /srv/k8s-charts/zfs-operator.yaml
+        mode: '0664'
+
+    - name: Apply metrics-server manifest to the cluster.
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        state: present
+        src: /srv/k8s-charts/zfs-operator.yaml
+
+    - name: Copy openebs csinode specs
+      copy:
+        dest: '/srv/k8s-charts/openebs-csinode.yaml'
+        owner: root
+        group: root
+        mode: 0444
+        content: |2
+          apiVersion: storage.k8s.io/v1
+          kind: CSINode
+          metadata:
+            annotations:
+              storage.alpha.kubernetes.io/migrated-plugins: kubernetes.io/aws-ebs,kubernetes.io/azure-disk,kubernetes.io/cinder,kubernetes.io/gce-pd
+            name: "{{ inventory_hostname }}"
+            ownerReferences:
+            - apiVersion: v1
+              kind: Node
+              name: "{{ inventory_hostname }}"
+              uid: "4018533c-71d4-4701-8755-6c7415b7c10e"
+          spec:
+            drivers:
+            - name: zfs.csi.openebs.io
+              nodeID: "{{ inventory_hostname }}"
+              topologyKeys:
+              - openebs.io/nodeid
+              - openebs.io/nodename
+              - openebs.io/availability_zone
+
+    - name: Copy openebs zfs storage class
+      copy:
+        dest: '/srv/k8s-charts/openebs-zfs-sc.yaml'
+        owner: root
+        group: root
+        mode: 0444
+        content: |2
+          apiVersion: storage.k8s.io/v1
+          kind: StorageClass
+          metadata:
+            name: openebs-zfspv
+          allowVolumeExpansion: true
+          parameters:
+            fstype: "zfs"
+            poolname: "data/zfspv-pool"
+            recordsize: "128k"
+            compression: "zstd-fast"
+            dedup: "off"
+          provisioner: zfs.csi.openebs.io
+          ## use If ZFS pool is available on certain nodes only
+          # allowedTopologies:
+          # - matchLabelExpressions:
+          #   - key: openebs.io/availability_zone
+          #     values:
+          #       - eu-south-1a
+          #       - eu-south-1b
+          #       - eu-south-1c
+
+    - kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        state: present
+        src: /srv/k8s-charts/openebs-csinode.yaml
+
+    - kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        state: present
+        src: /srv/k8s-charts/openebs-zfs-sc.yaml
+
+    - command: >-
+        kubectl patch storageclass openebs-zfspv
+        -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
+    - command: >-
+        kubectl patch storageclass local-path
+        -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
