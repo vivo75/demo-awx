@@ -35,7 +35,7 @@ data "aws_ami" "default" {
 #   }
   filter {
     name   = "name"
-    values = ["debian-12-amd64-*"]
+    values = ["debian-12-amd64-20231013-1532"]
   }
 }
 
@@ -48,7 +48,7 @@ data "aws_ami" "default-arm64" {
   }
   filter {
     name   = "name"
-    values = ["debian-12-arm64-*"]
+    values = ["debian-12-arm64-20231013-1532"]
   }
 }
 
@@ -347,7 +347,7 @@ resource "aws_instance" "k3s" {
   }
   root_block_device {
     delete_on_termination = true
-    volume_size           = 8
+    volume_size           = 30
     volume_type           = "gp3"
   }
   tags = merge( local.common_tags, { Name = "${each.value.instance_name}" } )
