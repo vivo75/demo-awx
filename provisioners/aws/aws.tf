@@ -1,6 +1,8 @@
 # sudo yum install -y yum-utils shadow-utils
 # sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
 # sudo yum -y install terraform
+# sudo bash -c '( echo Port 22010 | tee /etc/ssh/sshd_config.d/10-kyn.conf ; systemctl restart ssh )'
+# TODO: https://medium.com/@stefanroman/load-terraform-backend-output-into-ansible-39f8ec5cb0c4
 
 ############################## imports ##############################
 
@@ -361,4 +363,43 @@ resource "aws_volume_attachment" "k3s-v001" {
   stop_instance_before_detaching  = true
 }
 
-############################## XXX ##############################
+############################## Outputs ##############################
+
+output "main_region" {
+  value       = data.aws_region.current
+  description = "Default Region"
+}
+
+output "ip_addr_int_gitea" {
+  value       = aws_instance.git01.private_ip
+  description = "The private IP address of the main git instance"
+}
+output "ip_addr_ext_gitea" {
+  value       = aws_eip.git01.public_ip
+  description = "The public IP address of the main git instance"
+}
+
+output "aws_key_pair-deployer"                               { value = aws_key_pair.deployer }
+output "aws_vpc-demoawx_vpc"                                 { value = aws_vpc.demoawx_vpc }
+output "aws_internet_gateway-demoawx"                        { value = aws_internet_gateway.demoawx }
+output "aws_route_table-main-demoawx"                        { value = aws_route_table.main-demoawx }
+output "aws_security_group-demoawx"                          { value = aws_security_group.demoawx }
+output "aws_subnet-demoawx-eip"                              { value = aws_subnet.demoawx-eip }
+output "aws_route_table-demoawx-eip"                         { value = aws_route_table.demoawx-eip }
+output "aws_route-demoawx-eip"                               { value = aws_route.demoawx-eip }
+output "aws_route_table_association-demoawx-eip"             { value = aws_route_table_association.demoawx-eip }
+output "aws_route_table-demoawx"                             { value = aws_route_table.demoawx }
+output "aws_route-demoawx-defgw"                             { value = aws_route.demoawx-defgw }
+output "aws_route_table_association-demoawx-defgw"           { value = aws_route_table_association.demoawx-defgw }
+output "aws_subnet-demoawx_subnet"                           { value = aws_subnet.demoawx_subnet }
+output "aws_security_group-k3s"                              { value = aws_security_group.k3s }
+output "aws_vpc_security_group_egress_rule-sg-k3s-e001"      { value = aws_vpc_security_group_egress_rule.sg-k3s-e001 }
+output "aws_vpc_security_group_egress_rule-sg-k3s-e002"      { value = aws_vpc_security_group_egress_rule.sg-k3s-e002 }
+output "aws_network_interface-demoawx01"                     { value = aws_network_interface.demoawx01 }
+output "aws_instance-git01"                                  { value = aws_instance.git01 }
+output "aws_eip-git01"                                       { value = aws_eip.git01 }
+output "aws_network_interface-k3s"                           { value = aws_network_interface.k3s }
+output "aws_eip-k3s"                                         { value = aws_eip.k3s }
+output "aws_ebs_volume-k3s-v001"                             { value = aws_ebs_volume.k3s-v001 }
+output "aws_instance-k3s"                                    { value = aws_instance.k3s }
+output "aws_volume_attachment-k3s-v001"                      { value = aws_volume_attachment.k3s-v001 }
