@@ -13,7 +13,7 @@ postgresql_global_config_options:
   - option: log_directory
     value: 'log'
   - option: listen_addresses
-    value: "'*'"
+    value: "*"
 
 postgresql_hba_entries:
   - { type: local, database: all, user: postgres, auth_method: peer }
