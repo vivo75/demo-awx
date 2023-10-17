@@ -1,8 +1,5 @@
 ---
-# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file install-k3s.yml
-# https://www.suse.com/c/rancher_blog/deploying_ha_k3s_external_database/
-# https://github.com/k3s-io/k3s-ansible
-# TODO: kubectl label node ip-172-16-33-6 awslab.kyndryl.com/availability_zone=eu-south-1a
+# ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file install-zfs.yml
 
 - hosts: k3s_cluster
   gather_facts: yes
