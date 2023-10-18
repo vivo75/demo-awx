@@ -1,6 +1,7 @@
 ---
 # ansible-playbook -v -i inventory.yml -e @secrets.yml.enc --vault-password-file password_file k3s-awx-operator.yml
 # https://github.com/ansible/awx-operator/blob/devel/docs/installation/basic-install.md
+# https://www.linkedin.com/pulse/awx-kubernetes-external-db-rajveer-singh/
 
 - hosts: master[0]
   gather_facts: yes
@@ -13,6 +14,38 @@
       ansible.builtin.apt:
         pkg:
         - git
+        - jq
+
+    - name: create config directory
+      file:
+        path: /srv/awx/
+        state: directory
+
+    - name: create charts
+      ansible.builtin.template:
+        src: templates/awx/{{ item }}
+        dest: /srv/awx/{{ item }}
+        owner: root
+        mode: '0644'
+      loop:
+        - awx-instance-deployment.yml
+        - external-db-secret.yml
+        # - public-static-pvc.yml
+
+    - name: Create awx namespace
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        name: awx
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    # - name: Apply public-static-pvc
+    #   kubernetes.core.k8s:
+    #     kubeconfig: /etc/rancher/k3s/k3s.yaml
+    #     namespace: awx
+    #     state: present
+    #     src: /srv/awx/public-static-pvc.yml
 
     - name: Clone the operator
       ansible.builtin.git:
@@ -25,17 +58,17 @@
         clone: true
         force: true
 
-    - copy:
-        content: |2
-          ---
-          apiVersion: awx.ansible.com/v1beta1
-          kind: AWX
-          metadata:
-            name: awx-demo
-          spec:
-            service_type: clusterip
-            ingress_type: Route
-        dest: /srv/awx-operator/awx-demo.yaml
+    # - copy:
+    #     content: |2
+    #       ---
+    #       apiVersion: awx.ansible.com/v1beta1
+    #       kind: AWX
+    #       metadata:
+    #         name: awx-demo
+    #       spec:
+    #         service_type: clusterip
+    #         ingress_type: Route
+    #     dest: /srv/awx-operator/awx-demo.yaml
 
     - copy:
         content: |2
@@ -60,4 +93,23 @@
       args:
         chdir: /srv/awx-operator
 
-    - command: kubectl apply -k /srv/awx-operator
+    # - command: kubectl apply -k /srv/awx-operator
+    # TODO: wait for operator to be ready
+
+    - name: Create secret for postgres
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        namespace: awx
+        state: present
+        src: /srv/awx/external-db-secret.yml
+
+    - name: Create awx instance
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        namespace: awx
+        state: present
+        src: /srv/awx/awx-instance-deployment.yml
+        wait: true
+        wait_sleep: 2
+        wait_timeout: 600
+
