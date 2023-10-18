@@ -10,7 +10,9 @@
 
     - name: Get Terraform EFS backend variables
       fetch_terraform_backend_outputs:
-        object: "terraform.tfstate"
+        bucket: "tfstates-n34bc4bjy6vw9gw4"
+        object: "demo-awx.tfstate"
+        #object: "terraform.tfstate"
       register: tfstate
       no_log: true # Too much output
 

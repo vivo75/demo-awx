@@ -97,13 +97,13 @@ def format_data(data):
 
 
 def backend_pull(client, data):
-    #s3 = client.resource('s3')
-    #obj = s3.Object(data['bucket'], data['object'])
-    #raw_data = obj.get()['Body'].read().decode('utf-8')
-    #return format_data(raw_data)
-    with open('terraform.tfstate') as f:
-      raw_data = f.read().encode('utf-8')
+    s3 = client.resource('s3')
+    obj = s3.Object(data['bucket'], data['object'])
+    raw_data = obj.get()['Body'].read().decode('utf-8')
     return format_data(raw_data)
+    # with open('terraform.tfstate') as f:
+    #   raw_data = f.read().encode('utf-8')
+    # return format_data(raw_data)
 
 
 def build_client(data, ansible_module):
@@ -126,11 +126,11 @@ def main():
 
     arguments = {
         "bucket": {
-            "required": False,
+            "required": True,
             "type": "str"
         },
         "object": {
-            "required": False,
+            "required": True,
             "type": "str"
         },
         "aws_profile": {
