@@ -1,0 +1,176 @@
+---
+# ansible-playbook -v -i inventory.yml  -e @secrets.yml.enc --vault-password-file password_file setup-awx.yml
+# ansible-galaxy collection install awx.awx
+# https://www.ansible.com/blog/introducing-the-awx-collection
+# curl -XPOST -k -H "Content-type: application/json" -d '{"description":"Personal Tower CLI token", "application":null, "scope":"write"}' https://<USERNAME>:<PASSWORD>@<TOWER_SERVER>/api/v2/users/<USER_ID>/personal_tokens/ | python -m json.tool
+# curl -k -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -X POST  -d '{}' https://tower/api/v2/job_templates/5/launch/
+# if behind cloudflare DISABLE "Security -> Settings -> Browser Integrity Check"
+
+- hosts: localhost
+  gather_facts: no
+  become: no
+  collections:
+    - awx.awx
+  vars_files:
+    - vars.yml
+  vars:
+    awx_controller_host: https://awx.tshr.it
+    awx_validate_certs: True
+    awx_controller_username: admin
+    awx_controller_password: 4yZNvmxytEbiUoGqoVi7SR1YjWaMBbhX
+    #oauth_token: [$OAUTH_TOKEN] (if using oauth instead of a password)
+  tasks:
+
+    - name: Check that you can connect (GET) to a page and it returns a status 200
+      ansible.builtin.uri:
+        url: "{{ awx_controller_host }}"
+
+    - name: Create a new organization
+      awx.awx.organization:
+        name: "Kyndryl Italia"
+        description: "Kyndryl Italian Branch"
+        state: present
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+
+    - name: Create team
+      awx.awx.team:
+        name: "Consulting"
+        description: "Team Consulting di Kyndryl Italia"
+        organization: "Kyndryl Italia"
+        state: present
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+
+    - name: Add user
+      awx.awx.user:
+        username: francesco.riosa
+        password: "{{ password_francesco_riosa }}"
+        email: francesco.riosa@kyndryl.com
+        first_name: Francesco
+        last_name: Riosa
+        is_superuser: true
+        organization: "Kyndryl Italia"
+        state: present
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+
+    - name: Fetch private key
+      slurp:
+        src: '$HOME/.ssh/id_ed25519_kyn-aws-01'
+      register: aws_ssh_key
+
+    - name: Add Credential
+      awx.awx.credential:
+        name: Demo AWS Credential
+        credential_type: Machine
+        organization: "Kyndryl Italia"
+        inputs:
+          ssh_key_data: "{{ aws_ssh_key['content'] | b64decode }}"
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+      run_once: true
+
+    - name: Create SCM credential
+      awx.awx.credential:
+        name: SCM Credential
+        organization: "Kyndryl Italia"
+        state: present
+        credential_type: Source Control
+        inputs:
+          username: git
+          ssh_key_data: "{{ aws_ssh_key['content'] | b64decode }}"
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+
+    - name: Create Container Registry credential
+      awx.awx.credential:
+        name: Gitea Container Registry
+        organization: "Kyndryl Italia"
+        state: present
+        credential_type: Container Registry
+        inputs:
+          username: francesco.riosa
+          password: "{{ password_francesco_riosa }}"
+          host: http://git.tshr.it
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+
+    - name: Add Project
+      awx.awx.project:
+        name: "demo-awx"
+        description: "Demo per AWX"
+        organization: "Kyndryl Italia"
+        credential: "SCM Credential"
+        scm_update_on_launch: True
+        scm_update_cache_timeout: 60
+        scm_branch: main
+        scm_clean: true
+        scm_type: git
+        scm_url: http://git.tshr.it/francesco.riosa/demo-awx.git
+        update_project: true
+        state: present
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+
+    - name: Add Inventory Project
+      awx.awx.project:
+        name: "demo-awx inventory"
+        description: "Demo per AWX (inventory)"
+        organization: "Kyndryl Italia"
+        credential: "SCM Credential"
+        scm_update_on_launch: True
+        scm_update_cache_timeout: 60
+        scm_branch: inventory
+        scm_clean: true
+        scm_type: git
+        scm_url: http://git.tshr.it/francesco.riosa/demo-awx.git
+        update_project: true
+        state: present
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+
+    - name: Add inventory
+      awx.awx.inventory:
+        name: "demo-awx inventory"
+        description: "Inventory per demo AWX"
+        organization: "Kyndryl Italia"
+        state: present
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"
+
+    - name: Create inventory source
+      awx.awx.inventory_source:
+        # The constructed inventory source will always be in the format:
+        # "Auto-created source for: <constructed inventory name>"
+        name: "demo-awx inventory source"
+        inventory: "demo-awx inventory"
+        credential: "SCM Credential"
+        overwrite: True
+        update_on_launch: True
+        organization: "Kyndryl Italia"
+        source: scm
+        source_project: "demo-awx inventory"
+        source_path: "inventory.yaml"
+        controller_host: "{{ awx_controller_host }}"
+        validate_certs: "{{ awx_validate_certs }}"
+        controller_username: "{{ awx_controller_username }}"
+        controller_password: "{{ awx_controller_password }}"

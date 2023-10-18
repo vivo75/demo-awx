@@ -23,6 +23,7 @@
 - import_playbook: install-k3s.yml
 - import_playbook: k3s-helm.yml
 - import_playbook: k3s-awx-operator.yml
+- import_playbook: setup-awx.yml
 # - import_playbook: k3s-argocd-operator.yml
 # - import_playbook: k3s-poweroff.yml
 
