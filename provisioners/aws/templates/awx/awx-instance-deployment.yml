@@ -23,3 +23,11 @@ spec:
   #  - name: static-data
   #    persistentVolumeClaim:
   #      claimName: public-static-data-pvc
+  extra_settings:
+  # Required if we are serving http and we have a proxy that terminate httpS in front
+  - setting: CSRF_TRUSTED_ORIGINS
+    value:
+      - https://awx.tshr.it
+      - http://awx.tshr.it
+      - https://git.tshr.it
+      - http://git.tshr.it
