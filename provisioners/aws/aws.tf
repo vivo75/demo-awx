@@ -20,6 +20,11 @@ terraform {
       version = "~> 5.19"
     }
   }
+  backend "s3" {
+    bucket         = "tfstates-n34bc4bjy6vw9gw4"
+    key            = "demo-awx.tfstate"
+    region         = "eu-south-1"
+  }
 }
 
 # Configure the AWS Provider
