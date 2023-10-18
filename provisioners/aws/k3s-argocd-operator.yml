@@ -15,60 +15,86 @@
         - git
         - golang
 
-    - name: Clone the operator
-      ansible.builtin.git:
-        repo: https://github.com/argoproj-labs/argocd-operator.git
-        dest: /srv/argocd-operator
-        single_branch: yes
-        version: "{{ argocd_operator_version }}"
-        depth: 1
-        accept_newhostkey: true
-        clone: true
-        force: true
+    # - name: Clone the operator
+    #   ansible.builtin.git:
+    #     repo: https://github.com/argoproj-labs/argocd-operator.git
+    #     dest: /srv/argocd-operator
+    #     single_branch: yes
+    #     version: "{{ argocd_operator_version }}"
+    #     depth: 1
+    #     accept_newhostkey: true
+    #     clone: true
+    #     force: true
+    #
+    # - copy:
+    #     content: |2
+    #       apiVersion: v1
+    #       kind: ConfigMap
+    #       metadata:
+    #         name: argocd-demo
+    #         namespace: argocd
+    #         labels:
+    #           app.kubernetes.io/name: argocd-demo
+    #           app.kubernetes.io/part-of: argocd
+    #       data:
+    #           service_type: clusterip
+    #           ingress_type: Route
+    #     dest: /srv/argocd-operator/argocd-demo.yaml
+    #
+    # - copy:
+    #     content: |2
+    #       apiVersion: kustomize.config.k8s.io/v1beta1
+    #       kind: Kustomization
+    #       resources:
+    #         - github.com/argoproj-labs/argocd-operator/config/default?ref={{ argocd_operator_version }}
+    #         - argocd-demo.yaml
+    #
+    #       namespace: argocd-operator-system
+    #
+    #     dest: /srv/argocd-operator/kustomization.yaml
+    #
+    # - command: make deploy
+    #   args:
+    #     chdir: /srv/argocd-operator
+    #
+    # - command: kubectl apply -k /srv/argocd-operator
+    #
+    # - copy:
+    #     content: |2
+    #       ---
+    #       apiVersion: argoproj.io/v1alpha1
+    #       kind: ArgoCD
+    #       metadata:
+    #         name: argocd
+    #         labels:
+    #           tipo: ingress
+    #       spec:
+    #         server:
+    #           grpc:
+    #             ingress:
+    #               enabled: true
+    #           ingress:
+    #             enabled: true
+    #           insecure: true
+    #     dest: /srv/k8s-charts/argocd.yaml
 
-    - copy:
-        content: |2
-          ---
-          apiVersion: argocd.ansible.com/v1beta1
-            kind: ArgoCD
-          metadata:
-            name: argocd-demo
-          spec:
-            service_type: clusterip
-            ingress_type: Route
-        dest: /srv/argocd-operator/argocd-demo.yaml
+    - name: Create argocd namespace
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        name: argocd
+        api_version: v1
+        kind: Namespace
+        state: present
 
-    - copy:
-        content: |2
-          apiVersion: kustomize.config.k8s.io/v1beta1
-          kind: Kustomization
-          resources:
-            - github.com/argoproj-labs/argocd-operator/config/default?ref={{ argocd_operator_version }}
-            #- argocd-demo.yaml
+    - name: Download manifest
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+        dest: /srv/k8s-charts/argocd-install.yaml
+        mode: '0644'
 
-          namespace: argocd-operator-system
-
-        dest: /srv/argocd-operator/kustomization.yaml
-
-    - command: make deploy
-      args:
-        chdir: /srv/argocd-operator
-
-    - command: kubectl apply -k /srv/argocd-operator
-
-# # https://rpi4cluster.com/k3s/k3s-argocd/
-# kubectl create namespace argocd
-# #kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-# git clone  --depth 1 --branch v2.8.4  https://github.com/argoproj/argo-cd.git
-# cd argo-cd
-# kubectl apply -n argocd -f manifests/install.yaml
-# kubectl patch service argocd-server -n argocd --patch '{ "spec": { "type": "LoadBalancer", "loadBalancerIP": "192.168.0.208" } }'
-# kubectl get svc -n argocd
-# # admin
-# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
-# curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-# chmod +x /usr/local/bin/argocd
-# argocd login 192.168.0.208
-# argocd cluster list
-
-
+    - name: Create argocd
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        namespace: argocd
+        state: present
+        src: /srv/k8s-charts/argocd-install.yaml
