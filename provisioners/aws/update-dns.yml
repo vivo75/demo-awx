@@ -1,0 +1,51 @@
+---
+# ansible-playbook -v -i inventory.yml  -e @secrets.yml.enc --vault-password-file password_file update-dns.yml
+
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  become: no
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Get Terraform EFS backend variables
+      fetch_terraform_backend_outputs:
+        bucket: "tfstates-n34bc4bjy6vw9gw4"
+        object: "demo-awx.tfstate"
+      register: tfstate
+      no_log: true # Too much output
+
+    - name: External IP of ingress
+      ansible.builtin.debug:
+        var: tfstate.vars["aws_eip-git01"]["public_ip"]
+
+    - name: A record to AWX
+      community.general.cloudflare_dns:
+        zone: tshr.it
+        record: awx
+        proxied: true
+        type: A
+        value: '{{ tfstate.vars["aws_eip-git01"]["public_ip"] }}'
+        api_token: "{{ cloudflare_api_token }}"
+
+    - name: A record to GIT
+      community.general.cloudflare_dns:
+        zone: tshr.it
+        record: git
+        proxied: false
+        type: A
+        value: '{{ tfstate.vars["aws_eip-git01"]["public_ip"] }}'
+        api_token: "{{ cloudflare_api_token }}"
+
+    - name: A record to K3S cluster
+      community.general.cloudflare_dns:
+        zone: tshr.it
+        record: "{{ item }}"
+        proxied: false
+        type: A
+        value: "{{ tfstate.vars['aws_eip-k3s'][item]['public_ip'] }}"
+        api_token: "{{ cloudflare_api_token }}"
+      loop:
+        - k3s01
+        - k3s02
+        - k3s03

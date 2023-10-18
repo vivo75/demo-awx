@@ -14,6 +14,7 @@
       no_log: true # Too much output
 
 - import_playbook: run-terraform.yml
+- import_playbook: update-dns.yml
 - import_playbook: install-zfs.yml
 - import_playbook: install-zfs-storageclass.yml
 - import_playbook: install-db.yml
