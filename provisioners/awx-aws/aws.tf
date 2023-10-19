@@ -302,6 +302,41 @@ resource "aws_eip" "git01" {
   tags = merge( local.common_tags, { Name = "git01" } )
 }
 
+############################## Test machine ##############################
+
+resource "aws_network_interface" "demoawx02a" {
+  subnet_id   = aws_subnet.demoawx-eip.id
+  private_ips = [
+    "172.16.32.17",
+    ]
+  tags = local.common_tags
+}
+
+resource "aws_instance" "demoawx02" {
+  ami = data.aws_ami.default-arm64.id
+  key_name = aws_key_pair.deployer.key_name
+
+  instance_type = "t4g.small"
+
+  network_interface {
+    network_interface_id = aws_network_interface.demoawx02a.id
+    device_index         = 0
+  }
+
+  root_block_device {
+    delete_on_termination = true
+    volume_size           = 30
+    volume_type           = "gp3"
+  }
+  tags = merge( local.common_tags, { Name = "demoawx02" } )
+}
+
+resource "aws_eip" "demoawx02" {
+  instance = aws_instance.demoawx02.id
+  domain   = "vpc"
+  tags = merge( local.common_tags, { Name = "demoawx02" } )
+}
+
 ############################## K3S ##############################
 
 locals {
@@ -403,8 +438,12 @@ output "aws_vpc_security_group_egress_rule-sg-k3s-e002"      { value = aws_vpc_s
 output "aws_network_interface-demoawx01"                     { value = aws_network_interface.demoawx01 }
 output "aws_instance-git01"                                  { value = aws_instance.git01 }
 output "aws_eip-git01"                                       { value = aws_eip.git01 }
+output "aws_network_interface-demoawx02a"                    { value = aws_network_interface.demoawx02a }
+output "aws_instance-demoawx02"                              { value = aws_instance.demoawx02 }
+output "aws_eip-demoawx02"                                   { value = aws_eip.demoawx02 }
 output "aws_network_interface-k3s"                           { value = aws_network_interface.k3s }
 output "aws_eip-k3s"                                         { value = aws_eip.k3s }
 output "aws_ebs_volume-k3s-v001"                             { value = aws_ebs_volume.k3s-v001 }
 output "aws_instance-k3s"                                    { value = aws_instance.k3s }
 output "aws_volume_attachment-k3s-v001"                      { value = aws_volume_attachment.k3s-v001 }
+

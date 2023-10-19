@@ -49,3 +49,12 @@
         - k3s01
         - k3s02
         - k3s03
+
+    - name: A record to demoawx02
+      community.general.cloudflare_dns:
+        zone: tshr.it
+        record: demoawx02
+        proxied: true
+        type: A
+        value: '{{ tfstate.vars["aws_eip-demoawx02"]["public_ip"] }}'
+        api_token: "{{ cloudflare_api_token }}"
