@@ -1,0 +1,29 @@
+# ansible-playbook -v -i inventory.yml prepare.yml
+
+- hosts: all
+  gather_facts: no
+  become: true
+  tasks:
+    - name: Update system
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Add container related packages
+      ansible.builtin.apt:
+        pkg:
+        - containernetworking-plugins
+        - crun
+        - htop
+        - jq
+        - lxc
+        - lxctl
+        - lxd
+        - lxd-client
+        - lxd-tools
+        - podman
+        - podman-compose
+        - podman-docker
+        - podman-toolbox
+        - resource-agents

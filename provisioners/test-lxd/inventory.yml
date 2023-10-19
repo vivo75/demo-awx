@@ -1,0 +1,13 @@
+---
+
+all:
+  children:
+    demoawx02:
+      hosts:
+        k3s01.tshr.it:
+          ansible_host: 172.16.32.17
+  vars:
+    ansible_connection: ssh
+    ansible_user: admin
+    ansible_ssh_common_args: '-i /home/francesco.riosa/.ssh/id_ed25519_kyn-aws-01 -o ProxyCommand="ssh -W %h:%p -q LABjumphost"'
+    ansible_ssh_private_key_file: '/home/francesco.riosa/.ssh/id_ed25519_kyn-aws-01'
