@@ -43,7 +43,7 @@ postgresql_users:
 
 ############## gitea ##############
 
-gitea_version: 1.21
+gitea_version: 1.21.0
 gitea_hostname: 'git.tshr.it'
 gitea_db_pwd: "{{ password }}"
 gitea_disable_registration: true
